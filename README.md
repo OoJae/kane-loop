@@ -51,6 +51,16 @@ and watch the loop close: **RED → failure injected → agent self-corrects →
 **Requirements:** Node ≥ 18, Chrome, `jq`, Claude Code, and `kane-cli` authenticated
 (`npm i -g @testmuai/kane-cli && kane-cli login`).
 
+![The loop closing live](evidence/ui/gate3-live-loop-closed.png)
+
+*Real run, not a mockup: Kane went RED at 00:44:07, the failure was injected into the agent's
+context, the agent corrected itself, and Kane went GREEN at 00:44:29.*
+
+**Verified on a clean clone.** `git clone` → `./scripts/dev.sh` → all three services live in
+**17 seconds**, then one prompt reproduced the whole loop end to end: two RED iterations, a
+self-correction, GREEN, and the Stop gate releasing — 160 s total, no setup beyond that one
+command.
+
 ---
 
 ## What actually happens (no mocks anywhere)
