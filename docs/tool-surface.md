@@ -111,8 +111,14 @@ is **not reliable**:
 Splitting them into `## Load the page again from scratch` (a real navigation)
 and `## Verify dark mode survived` (assertion only) makes the verdict correct
 and deterministic, because Kane takes a fresh screenshot at each step boundary.
-**Phrase the assertion step with its failure condition spelled out** ("if the
-background is light, dark mode did not persist and this step must fail").
+
+**5. One step, ONE assertion — never spell out the failure condition.**
+Writing *"Assert the background is dark. If it is light or white, dark mode did
+not persist and this step must fail"* made Kane extract **two** checkpoints from
+one step ("background is dark" AND "background is light or white"), assert both,
+contradict itself, and abort with `agent_error.child_failed` — *"AP determined
+agent is stuck"* — even though the app was correct. The fix is the plainest
+possible sentence: `Assert that the page background is still dark.`
 
 ### Confirmed by real runs
 
@@ -120,8 +126,8 @@ background is light, dark mode did not persist and this step must fail").
 |---|---|
 | Auth | OAuth, profile "O.O. Jae" (`captainjoe550`), env prod. **Token expiry showed 2026-08-20 — re-run `kane-cli login --oauth` if runs start failing.** |
 | Exit code on red | **1**, with step 4 `failed` |
-| Exit code on green | see `evidence/green/` |
-| Cached replay | **~60–87 s** for the 4-step flow, well inside the 300 s hook timeout |
+| Exit code on green | **0**, 4/4 steps passed |
+| Cached replay | **26–34 s** fully cached (green 26 s, red 27 s) — comfortably inside the 300 s hook timeout and fast enough for live demo |
 | Cold authoring | ~4 min, ~34 credits |
 | Project | auto-created "Kane Loop" on first run (`project_folder_auto_defaulted` event) |
 | Artifacts | `~/.testmuai/kaneai/sessions/<id>/runs/<n>/` — `run_dir` in `run_end` points at it |
