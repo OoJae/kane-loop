@@ -9,7 +9,20 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 echo "→ restoring target-app/src to the seeded (buggy) state"
-git checkout -- target-app/src
+# Restore from the pristine seed, NOT from git HEAD. A `git checkout` here is
+# only correct while HEAD happens to hold the buggy version — and a stray
+# `git add -A` after a successful loop run silently commits the agent's fix,
+# after which the "reset" would restore the FIX and the demo would open green.
+# That happened once. The seed file is the source of truth now.
+cp "$ROOT/target-app/.seed/App.tsx" "$ROOT/target-app/src/App.tsx"
+
+if grep -q localStorage "$ROOT/target-app/src/App.tsx"; then
+  echo "✗ ABORT: seed copy is not the buggy version — dark mode would already persist." >&2
+  exit 1
+fi
+
+# Any other stray edits the agent made under src/ still come from git.
+git checkout -- target-app/src/index.css target-app/src/main.tsx 2>/dev/null || true
 
 echo "→ un-staging the generalization flow (demo beat 2 re-stages it)"
 if [ -f "$ROOT/tests/formvalidation_test.md" ]; then

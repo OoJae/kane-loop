@@ -1,6 +1,17 @@
 import { useCallback, useState } from 'react'
 import { isHttpUrl, shortenPath } from '../lib/format'
+import { EVIDENCE_BASE } from '../lib/config'
 import type { Evidence } from '../lib/store'
+
+/**
+ * The orchestrator serves the repo's `evidence/` directory statically, so a
+ * repo-relative run_dir becomes a clickable link; absolute Kane session paths
+ * stay copy-to-clipboard.
+ */
+function browsableUrl(value: string): string | null {
+  const match = /(?:^|\/)evidence\/(.+)$/.exec(value.replace(/\\/g, '/'))
+  return match ? `${EVIDENCE_BASE}/${match[1]}` : null
+}
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false)
@@ -81,9 +92,24 @@ function Row({ label, value }: { label: string; value?: string }) {
           </>
         ) : (
           <>
-            <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-ice" title={value}>
-              {shortenPath(value, 3)}
-            </code>
+            {browsableUrl(value) ? (
+              <a
+                href={browsableUrl(value) as string}
+                target="_blank"
+                rel="noreferrer"
+                className="min-w-0 flex-1 truncate font-mono text-[12px] text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+                title={value}
+              >
+                {shortenPath(value, 3)}
+              </a>
+            ) : (
+              <code
+                className="min-w-0 flex-1 truncate font-mono text-[12px] text-ice"
+                title={value}
+              >
+                {shortenPath(value, 3)}
+              </code>
+            )}
             <CopyButton value={value} />
           </>
         )

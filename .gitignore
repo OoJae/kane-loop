@@ -19,3 +19,6 @@ node_modules/
 
 # scratch from visual verification
 .playwright-mcp/
+
+# runtime event log (hooks write it; demo-reset truncates it)
+.kane-events.ndjson
