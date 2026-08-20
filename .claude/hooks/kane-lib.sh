@@ -3,7 +3,12 @@
 # Sourced by kane-verify.sh (PostToolUse) and kane-gate.sh (Stop).
 
 # --- paths -------------------------------------------------------------------
-ROOT="${CLAUDE_PROJECT_DIR:-$(pwd)}"
+# Derive the repo root from THIS FILE's location (<repo>/.claude/hooks/), never
+# from $CLAUDE_PROJECT_DIR or $PWD. The headless agent runs with cwd=target-app/,
+# so the project dir is target-app/ — resolving from it would look for tests/ and
+# the event log one level too deep and the loop would silently never verify.
+KANE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$KANE_LIB_DIR/../.." && pwd)"
 EVENTS="$ROOT/.kane-events.ndjson"
 STDERR_LOG="$ROOT/.kane-stderr.log"
 LOCK="$ROOT/.kane.lock"
