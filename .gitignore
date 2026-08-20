@@ -22,3 +22,8 @@ node_modules/
 
 # runtime event log (hooks write it; demo-reset truncates it)
 .kane-events.ndjson
+
+# private working docs — strategy/build notes, not part of the submission
+docs/kane-loop-build-guide.md
+docs/kane-loop-winning-strategy.md
+docs/kane-loop-master-prompt.md
