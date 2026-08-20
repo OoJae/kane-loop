@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "kane": {
+      "type": "stdio",
+      "command": "/Users/oluwademilade/Desktop/Kane Loop/mcp/node_modules/.bin/tsx",
+      "args": [
+        "/Users/oluwademilade/Desktop/Kane Loop/mcp/src/server.ts"
+      ],
+      "env": {
+        "KANE_PROJECT_DIR": "/Users/oluwademilade/Desktop/Kane Loop"
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ interface TopBarProps {
   value: string
   onChange: (value: string) => void
   onSubmit: () => void
+  onStop: () => void
   /** POST /run is in flight — the button is genuinely blocked. */
   submitting: boolean
   /** The agent is mid-run; the button stays live so the server can answer 409. */
@@ -20,6 +21,7 @@ export function TopBar({
   value,
   onChange,
   onSubmit,
+  onStop,
   submitting,
   agentBusy,
   error,
@@ -80,6 +82,16 @@ export function TopBar({
           >
             {submitting ? 'Sending…' : agentBusy ? 'Running…' : 'Run'}
           </button>
+          {agentBusy && !demo ? (
+            <button
+              type="button"
+              onClick={onStop}
+              title="Ask the orchestrator to stop the current run"
+              className="h-12 shrink-0 rounded-xl border border-line bg-panel px-4 text-[14px] font-bold text-mist transition-colors hover:border-red/60 hover:text-red-soft"
+            >
+              Stop
+            </button>
+          ) : null}
         </form>
 
         <ConnectionBadge connection={connection} demo={demo} />

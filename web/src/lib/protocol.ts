@@ -54,6 +54,9 @@ export interface FlowEndEvent extends LoopEventBase {
   credits?: number
   run_dir?: string
   test_url?: string
+  /** Extra fields real runs carry beyond the protocol doc. */
+  reason_code?: string
+  session_dir?: string
 }
 
 export interface FlowErrorEvent extends LoopEventBase {

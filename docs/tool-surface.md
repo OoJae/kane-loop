@@ -261,3 +261,32 @@ gate_release stop_hook_active           ← loop guard released it next turn
 The agent visibly received the block and answered it in the transcript
 ("…that instruction outranks the gate"), then `stop_hook_active` prevented the
 infinite re-block. Both halves of the guarantee verified.
+
+## 5. Two more real-data findings (found while building the MCP server)
+
+**6. `credits_consumed` is nested at `run_end.verdict.credits_consumed`.**
+Not top level, despite what the docs imply. Reading only the top level reports
+**0 credits for every run**. Correct read:
+`(.credits_consumed // .verdict.credits_consumed // .credits // 0)`, summed
+across the per-step `run_end` events. A real red run costs ~3.15 credits cached.
+
+**7. `run_end.verdict` blames the test for the app's bug — never surface it.**
+On the real dark-mode failure, `verdict` contained:
+
+```
+family:          "automation_bug"
+one_liner:       "The replay failed because it expected a dark page state that
+                  was not present when the app loaded."
+suggestion:      "Update the test to explicitly turn on dark mode or verify the
+                  saved theme setup before checking the background color."
+```
+
+Kane diagnosed its own replay rather than the application, and its suggestion is
+to **weaken the test** — the exact thing this project forbids. If that text were
+injected as the failure reason, the agent would be nudged to edit ground truth.
+The hooks therefore read only the literal failed assertion and the top-level
+`reason`, and never `verdict.*`. This is asserted by a grep in the parser tests.
+
+`test_url` is also absent in real runs (`final_url` is used as the fallback), and
+top-level `run_end.summary` is an empty string, so the flow summary is
+synthesised from `test_md_summary.steps`.

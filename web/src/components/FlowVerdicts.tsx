@@ -36,7 +36,7 @@ export function FlowVerdicts({ flows }: { flows: FlowVerdict[] }) {
           <code className="font-mono text-mist">flow_end</code> counts as a verdict.
         </p>
       ) : (
-        <ul className="scroll-slim flex max-h-40 flex-col gap-1.5 overflow-y-auto pr-0.5">
+        <ul className="scroll-slim flex max-h-52 flex-col gap-1.5 overflow-y-auto pr-0.5">
           {flows.map((flow) => (
             <li
               key={flow.id}
@@ -51,6 +51,14 @@ export function FlowVerdicts({ flows }: { flows: FlowVerdict[] }) {
                 <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-ice">
                   {flow.flow}
                 </code>
+                {flow.reasonCode ? (
+                  <span
+                    className="shrink-0 rounded border border-line px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-dim uppercase"
+                    title="Kane reason_code"
+                  >
+                    {flow.reasonCode}
+                  </span>
+                ) : null}
                 <span className="shrink-0 font-mono text-[10.5px] text-dim tabular-nums">
                   {formatDuration(flow.durationMs)}
                   {flow.credits !== undefined ? ` · ${flow.credits} cr` : ''}

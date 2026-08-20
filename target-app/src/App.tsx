@@ -7,8 +7,18 @@ type Note = {
   createdAt: string
 }
 
+const THEME_STORAGE_KEY = 'kane-notes-theme'
+
 function createId(): string {
   return Math.random().toString(36).slice(2, 10)
+}
+
+function readStoredTheme(): boolean {
+  try {
+    return window.localStorage.getItem(THEME_STORAGE_KEY) === 'dark'
+  } catch {
+    return false
+  }
 }
 
 function formatTime(iso: string): string {
@@ -19,7 +29,7 @@ function formatTime(iso: string): string {
 }
 
 export default function App() {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(readStoredTheme)
   const [draft, setDraft] = useState('')
   const [notes, setNotes] = useState<Note[]>([
     {
@@ -31,6 +41,11 @@ export default function App() {
 
   useEffect(() => {
     document.body.dataset.theme = isDark ? 'dark' : 'light'
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, isDark ? 'dark' : 'light')
+    } catch {
+      // Storage unavailable — the theme still applies for this session.
+    }
   }, [isDark])
 
   function toggleTheme() {

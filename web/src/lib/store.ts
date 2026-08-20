@@ -44,6 +44,8 @@ export interface FlowVerdict {
   oneLiner?: string
   reason?: string
   summary?: string
+  /** e.g. "assertion_failed" — Kane's machine-readable failure class. */
+  reasonCode?: string
   durationMs?: number
   credits?: number
   runDir?: string
@@ -447,7 +449,7 @@ function applyFlowEnd(
   const durationMs = toMillis(event.duration)
   // Kane sends "" for fields it has nothing for; those must not overwrite
   // evidence captured by an earlier flow in the same session.
-  const runDir = present(event.run_dir)
+  const runDir = present(event.run_dir) ?? present(event.session_dir)
   const testUrl = present(event.test_url)
   const verdict: FlowVerdict = {
     id: nextId(draft),
@@ -456,6 +458,7 @@ function applyFlowEnd(
     oneLiner: present(event.one_liner),
     reason: present(event.reason),
     summary: present(event.summary),
+    reasonCode: present(event.reason_code),
     durationMs,
     credits: typeof event.credits === 'number' ? event.credits : undefined,
     runDir,

@@ -7,7 +7,7 @@ import { DemoBanner } from './components/DemoBanner'
 import { initialState, reducer } from './lib/store'
 import { useSocket } from './lib/useSocket'
 import { useDemo } from './lib/useDemo'
-import { RUN_ENDPOINT, SERVER_URL, WS_URL } from './lib/config'
+import { RUN_ENDPOINT, SERVER_URL, STOP_ENDPOINT, WS_URL } from './lib/config'
 import { getDemoScript, type DemoScript } from './lib/demo'
 import type { NormalisedMessage } from './lib/protocol'
 
@@ -128,6 +128,21 @@ export default function App() {
       setSubmitting(false)
     }
   }, [prompt, submitting, demo])
+
+  /** Ask the orchestrator to abandon the in-flight run (server: POST /stop). */
+  const stop = useCallback(async () => {
+    if (demo) return
+    try {
+      const response = await fetch(STOP_ENDPOINT, { method: 'POST' })
+      if (!response.ok && response.status !== 409) {
+        setError(`Orchestrator could not stop the run: ${response.status}`)
+        return
+      }
+      dispatch({ kind: 'notice', text: 'Stop requested by the operator', at: Date.now() })
+    } catch {
+      setError(`Can't reach the orchestrator at ${SERVER_URL}.`)
+    }
+  }, [demo])
 
   return (
     <div className="grid-bg flex h-full min-h-screen flex-col gap-3 bg-ink p-3 xl:h-screen xl:gap-3.5 xl:p-4">

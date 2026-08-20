@@ -41,16 +41,17 @@ emit_event() {
 # NOTE: `credits_consumed` is the real field name (v0.8.4) — the docs and the
 # build guide both say `credits`. Both are read, real name first.
 emit_flow_end() {
-  local flow="$1" verdict="$2" run_end="$3" credits="$4"
+  local flow="$1" verdict="$2" run_end="$3" credits="$4" headline="$5"
   printf '%s' "$run_end" | jq -c \
     --arg source "kane-loop" --arg flow "$flow" --arg phase "${KANE_PHASE:-}" \
-    --arg status "$verdict" --arg credits "$credits" \
+    --arg status "$verdict" --arg credits "$credits" --arg headline "$headline" \
     '{source:$source,type:"flow_end",phase:$phase,flow:$flow,ts:(now|todateiso8601),
-      status:$status,summary:(.summary//""),one_liner:(.one_liner//""),
+      status:$status,summary:(.summary//""),one_liner:$headline,
       reason:(.reason//""),duration:(.duration//null),
       credits:(($credits|tonumber?)//null),
       reason_code:(.reason_code//""),
-      run_dir:(.run_dir//""),session_dir:(.session_dir//""),test_url:(.test_url//"")}' \
+      run_dir:(.run_dir//""),session_dir:(.session_dir//""),
+      test_url:(.test_url//.final_url//"")}' \
     >>"$EVENTS" 2>/dev/null
 }
 
@@ -129,7 +130,11 @@ run_kane_suite() {
     # the first failing run_end when there is one and fall back to the last.
     run_end="$(jq -c 'select(.type=="run_end" and .status!="passed")' <"$raw" 2>/dev/null | head -1)"
     [ -z "$run_end" ] && run_end="$(jq -c 'select(.type=="run_end")' <"$raw" 2>/dev/null | tail -1)"
-    credits="$(jq -s '[.[] | select(.type=="run_end") | (.credits_consumed // .credits // 0)] | add // 0' <"$raw" 2>/dev/null)"
+    # credits_consumed lives INSIDE run_end.verdict on v0.8.4, not at the top
+    # level as the docs imply. Reading only the top level reports 0 every time.
+    credits="$(jq -s '[.[] | select(.type=="run_end")
+                      | (.credits_consumed // .verdict.credits_consumed // .credits // 0)]
+                      | add // 0' <"$raw" 2>/dev/null)"
 
     if [ -z "$run_end" ]; then
       # No verdict at all: Kane errored (auth, infra, crash) before reporting.
@@ -162,24 +167,35 @@ run_kane_suite() {
       status="failed"
     fi
 
-    emit_flow_end "$name" "$status" "$run_end" "$credits"
+    # Name the step and the assertion that broke. This is done for every run so
+    # the emitted event can carry a truthful headline.
+    #
+    # We deliberately never read run_end.verdict.* here. On a real failure it
+    # contained: one_liner "The replay failed because it expected a dark page
+    # state that was not present", and suggestion "Update the test to explicitly
+    # turn on dark mode". Kane blames the test for the app's bug — surfacing that
+    # would push the agent to weaken ground truth. The literal failed assertion
+    # is the honest, actionable signal.
+    local step heading assertion headline
+    step="$(jq -r 'select(.type=="test_md_step_end" and .status!="passed") | .step_index' <"$raw" 2>/dev/null | head -1)"
+    heading=""
+    if [ -n "$step" ]; then
+      heading="$(jq -r --argjson i "$step" 'select(.type=="test_md_step_start" and .step_index==$i) | .heading' <"$raw" 2>/dev/null | head -1)"
+    fi
+    assertion="$(jq -r 'select(.type=="step_end" and .status=="failed") | .summary // empty' <"$raw" 2>/dev/null | head -1)"
+    assertion="${assertion#assert: }"
+
+    if [ "$status" = "passed" ]; then
+      headline="all steps passed"
+    elif [ -n "$assertion" ]; then
+      headline="failed assertion: ${assertion}"
+    else
+      headline="$status"
+    fi
+
+    emit_flow_end "$name" "$status" "$run_end" "$credits" "$headline"
 
     if [ "$status" != "passed" ]; then
-      # Name the step that failed — the agent needs to know which assertion broke.
-      local step
-      step="$(jq -r 'select(.type=="test_md_step_end" and .status!="passed") | .step_index' <"$raw" 2>/dev/null | head -1)"
-      local heading=""
-      if [ -n "$step" ]; then
-        heading="$(jq -r --argjson i "$step" 'select(.type=="test_md_step_start" and .step_index==$i) | .heading' <"$raw" 2>/dev/null | head -1)"
-      fi
-      # Prefer the failed ASSERTION text over run_end.reason/summary. The
-      # assertion is literal and actionable ("the page background is still dark
-      # after the reload"); Kane's run-level summary can editorialise about its
-      # own wiring, which would send the agent debugging the test instead of
-      # the app.
-      local assertion
-      assertion="$(jq -r 'select(.type=="step_end" and .status=="failed") | .summary // empty' <"$raw" 2>/dev/null | head -1)"
-      assertion="${assertion#assert: }"
       reason="$(printf '%s' "$run_end" | jq -r '.reason // .one_liner // "no reason reported"')"
 
       if [ -n "$assertion" ]; then
