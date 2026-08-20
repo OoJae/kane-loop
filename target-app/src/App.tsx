@@ -18,18 +18,8 @@ function formatTime(iso: string): string {
   })
 }
 
-const THEME_KEY = 'kane-notes-theme'
-
-function readStoredTheme(): boolean {
-  try {
-    return window.localStorage.getItem(THEME_KEY) === 'dark'
-  } catch {
-    return false
-  }
-}
-
 export default function App() {
-  const [isDark, setIsDark] = useState(readStoredTheme)
+  const [isDark, setIsDark] = useState(false)
   const [draft, setDraft] = useState('')
   const [notes, setNotes] = useState<Note[]>([
     {
@@ -41,11 +31,6 @@ export default function App() {
 
   useEffect(() => {
     document.body.dataset.theme = isDark ? 'dark' : 'light'
-    try {
-      window.localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light')
-    } catch {
-      // storage unavailable (private mode, blocked cookies) — theme just won't persist
-    }
   }, [isDark])
 
   function toggleTheme() {
