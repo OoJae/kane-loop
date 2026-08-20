@@ -40,7 +40,7 @@ export function Pane({
 }: PaneProps) {
   return (
     <section
-      className={`flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border bg-panel/80 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-colors duration-300 ${RING[tone]} ${className}`}
+      className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border bg-panel/80 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur-sm transition-colors duration-300 ${RING[tone]} ${className}`}
     >
       <header className="flex shrink-0 items-center gap-3 border-b border-line-soft bg-ink-2/70 px-4 py-3">
         <span

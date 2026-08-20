@@ -63,7 +63,7 @@ export function describeTool(name: string, input: Record<string, unknown>): stri
 
   if (FILE_TOOLS.has(name)) {
     const file = str('file_path') ?? str('notebook_path') ?? str('path')
-    if (file) return shortenPath(file, 2)
+    if (file) return shortenPath(file, 3)
   }
   if (name === 'Bash' || name === 'BashOutput') {
     const command = str('command')

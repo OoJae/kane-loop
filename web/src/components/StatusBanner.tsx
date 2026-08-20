@@ -131,7 +131,7 @@ export function StatusBanner({
         <span className="ml-auto font-mono text-[12px] text-dim tabular-nums">
           {running && elapsedMs !== null
             ? `${formatDuration(elapsedMs)} elapsed`
-            : lastRunMs !== null
+            : lastRunMs !== null && lastRunMs > 250
               ? `last run ${formatDuration(lastRunMs)}`
               : ''}
         </span>

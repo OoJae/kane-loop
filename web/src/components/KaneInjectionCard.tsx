@@ -61,11 +61,10 @@ export function KaneInjectionCard({
       </div>
 
       <footer className="relative flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-red/25 bg-[#1a070a]/60 px-4 py-2.5 text-[11.5px] leading-snug text-red-soft">
-        <span className="font-bold tracking-[0.1em] uppercase">
+        <span className="shrink-0 rounded bg-red/20 px-1.5 py-0.5 font-mono text-[10.5px] font-bold tracking-[0.08em] uppercase">
           {isGate ? 'decision: block' : 'additionalContext'}
         </span>
-        <span className="text-dim">·</span>
-        <span className="text-mist">
+        <span className="min-w-0 flex-1 text-mist">
           {isGate
             ? `returned by .claude/hooks/kane-gate.sh — Claude cannot say “done” while Kane is red${
                 blocks ? '' : ' (advisory)'

@@ -174,6 +174,31 @@ the one mechanism that must never fail open:
 
 ---
 
+## 2b. Is `additionalContext` actually delivered? — verified by direct probe
+
+Because "the agent reads Kane's failure" is the central claim of this project, we
+did not take it on trust. A temporary PostToolUse hook injected a distinctive
+instruction, and a headless session was asked to edit a file in `target-app/src`.
+
+The agent's own words in the transcript:
+
+> "the PostToolUse hook that fired on that edit returned text claiming 'KANE
+> VERIFICATION FAILED' … the text was received, and not acted on. … That's an
+> instruction arriving through tool output, not from you … so I treated it as
+> data rather than a command."
+
+**Two things are proven at once.** `hookSpecificOutput.additionalContext` is
+delivered to the model on Claude Code 2.1.238 — and the agent correctly refuses
+to obey *unrelated commands* smuggled through hook output. It does act on a
+genuine verification failure about the code it just wrote, which is exactly what
+the loop needs and exactly what the Phase 2 run shows.
+
+Note: hook activity does **not** appear in `--output-format stream-json` output
+on this version (no `hook_started` / `hook_response` events were emitted, and the
+injected text is not echoed). `.kane-events.ndjson` is therefore the only
+reliable place to observe the loop — which is why the UI reads that file rather
+than trying to derive hook state from the agent stream.
+
 ## 3. Hook harness tests (run with piped JSON — no Kane, no Claude)
 
 All passed against the real scripts:
@@ -196,3 +221,37 @@ All passed against the real scripts:
 > The stubbed `kane-cli` used in tests 6–7 was a throwaway fixture on `PATH`, deleted immediately
 > afterwards. **No stub, mock, or simulated verdict exists anywhere in the shipped project** —
 > every RED and GREEN in the demo comes from a real Kane run.
+
+## 4. Phase 2 — the closed loop, observed end to end
+
+One `claude -p` command, no human input, captured in `evidence/loop-terminal/`:
+
+```
+verify_start                      agent saved App.tsx (added the localStorage read)
+flow_end     status=failed        Kane RED — still no persistence
+verify_result status=red          failure injected into the agent's context
+verify_start                      agent saved again (added the localStorage write)
+flow_end     status=passed        Kane GREEN
+verify_result status=green
+gate_start                        agent tried to finish
+flow_end     status=passed
+gate_result  status=green         gate released
+```
+
+The RED is honest: after the first edit the app *read* the stored theme but never
+*wrote* it, so nothing persisted and Kane caught it.
+
+### Negative test — the gate really blocks
+
+With the bug present, the agent was asked to do something trivial and stop:
+
+```
+gate_start
+flow_end     status=failed
+gate_result  status=red   blocks=1     ← stop BLOCKED
+gate_release stop_hook_active           ← loop guard released it next turn
+```
+
+The agent visibly received the block and answered it in the transcript
+("…that instruction outranks the gate"), then `stop_hook_active` prevented the
+infinite re-block. Both halves of the guarantee verified.

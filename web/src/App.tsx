@@ -129,8 +129,6 @@ export default function App() {
     }
   }, [prompt, submitting, demo])
 
-  const redCount = state.transcript.filter((item) => item.kind === 'injection').length
-
   return (
     <div className="grid-bg flex h-full min-h-screen flex-col gap-3 bg-ink p-3 xl:h-screen xl:gap-3.5 xl:p-4">
       {demo ? (
@@ -163,7 +161,7 @@ export default function App() {
           <TranscriptPane
             items={state.transcript}
             busy={state.agentBusy}
-            redCount={redCount}
+            alert={state.status === 'RED'}
           />
         </div>
         <div className="flex min-h-[620px] flex-col xl:min-h-0">

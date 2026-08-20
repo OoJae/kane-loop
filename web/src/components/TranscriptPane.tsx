@@ -8,14 +8,15 @@ const STICK_THRESHOLD_PX = 90
 interface TranscriptPaneProps {
   items: TranscriptItem[]
   busy: boolean
-  redCount: number
+  /** True while Kane is red, so the pane frame echoes the alarm. */
+  alert: boolean
 }
 
 /**
  * Middle pane — the agent's stream-json transcript, with Kane's injected
  * failures rendered inline exactly where the agent received them.
  */
-export function TranscriptPane({ items, busy, redCount }: TranscriptPaneProps) {
+export function TranscriptPane({ items, busy, alert }: TranscriptPaneProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const [stuck, setStuck] = useState(true)
   const [unread, setUnread] = useState(0)
@@ -57,7 +58,7 @@ export function TranscriptPane({ items, busy, redCount }: TranscriptPaneProps) {
       step="02"
       title="Agent transcript"
       subtitle="claude · stream-json"
-      tone={redCount > 0 ? 'red' : 'neutral'}
+      tone={alert ? 'red' : 'neutral'}
       actions={
         <span
           className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10.5px] font-bold tracking-[0.12em] uppercase ${
