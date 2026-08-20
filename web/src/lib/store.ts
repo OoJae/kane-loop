@@ -19,7 +19,7 @@ import {
   type ToolResultBlock,
   type ToolUseBlock,
 } from './protocol'
-import { describeTool, textOf, toMillis } from './format'
+import { describeTool, present, textOf, toBool, toMillis } from './format'
 
 export type BannerStatus = 'IDLE' | 'RUNNING' | 'RED' | 'GREEN' | 'UNVERIFIED'
 
@@ -299,7 +299,8 @@ function applyLoopEvent(
           id: nextId(draft),
           flow: event.flow ?? 'unknown flow',
           status: 'error',
-          reason: event.reason ?? 'Kane produced no run_end (auth/infra failure)',
+          reason:
+            present(event.reason) ?? 'Kane produced no run_end (auth/infra failure)',
           ts,
           loop: draft.loop,
           phase,
@@ -338,7 +339,9 @@ function applyLoopEvent(
           ts,
           replay,
           phase: 'verify',
-          detail: event.detail ?? 'Kane reported a failure with no detail.',
+          detail:
+            present(event.detail) ??
+            'Kane reported a failure but sent no detail. Check the run log and evidence.',
           loop: draft.loop,
           blocks: false,
         })
@@ -369,9 +372,10 @@ function applyLoopEvent(
           ts,
           replay,
           phase: 'gate',
-          detail: event.detail ?? 'The Stop gate blocked completion: Kane is red.',
+          detail:
+            present(event.detail) ?? 'The Stop gate blocked completion: Kane is red.',
           loop: draft.loop,
-          blocks: event.blocks !== false,
+          blocks: toBool(event.blocks, true),
         })
       } else {
         setStatus(draft, 'GREEN', at)
@@ -380,11 +384,19 @@ function applyLoopEvent(
     }
 
     case 'gate_release': {
+      // A release without a status is an escape hatch (e.g. `stop_hook_active`),
+      // NOT a pass — never colour it green while the last verdict was red.
+      const releaseTone: LogTone =
+        event.status === 'green'
+          ? 'green'
+          : event.status === 'red' || draft.status === 'RED'
+            ? 'amber'
+            : 'green'
       pushLog(draft, {
         ts,
         label: 'Gate released',
         detail: event.reason,
-        tone: event.status === 'red' ? 'red' : 'green',
+        tone: releaseTone,
         phase: 'gate',
         loop: draft.loop,
         replay,
@@ -433,27 +445,31 @@ function applyFlowEnd(
 ): void {
   const status: FlowStatus = event.status ?? 'error'
   const durationMs = toMillis(event.duration)
+  // Kane sends "" for fields it has nothing for; those must not overwrite
+  // evidence captured by an earlier flow in the same session.
+  const runDir = present(event.run_dir)
+  const testUrl = present(event.test_url)
   const verdict: FlowVerdict = {
     id: nextId(draft),
     flow: event.flow ?? 'unknown flow',
     status,
-    oneLiner: event.one_liner,
-    reason: event.reason,
-    summary: event.summary,
+    oneLiner: present(event.one_liner),
+    reason: present(event.reason),
+    summary: present(event.summary),
     durationMs,
     credits: typeof event.credits === 'number' ? event.credits : undefined,
-    runDir: event.run_dir,
-    testUrl: event.test_url,
+    runDir,
+    testUrl,
     ts,
     loop: draft.loop,
     phase,
   }
   draft.flows = [...draft.flows.filter((f) => f.flow !== verdict.flow), verdict]
   if (typeof event.credits === 'number') draft.creditsTotal += event.credits
-  if (event.run_dir || event.test_url) {
+  if (runDir || testUrl) {
     draft.evidence = {
-      runDir: event.run_dir ?? draft.evidence?.runDir,
-      testUrl: event.test_url ?? draft.evidence?.testUrl,
+      runDir: runDir ?? draft.evidence?.runDir,
+      testUrl: testUrl ?? draft.evidence?.testUrl,
       flow: verdict.flow,
       ts,
     }

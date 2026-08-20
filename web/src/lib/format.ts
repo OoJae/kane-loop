@@ -140,3 +140,20 @@ export function countLines(text: string): number {
 export function isHttpUrl(value: string | undefined): boolean {
   return typeof value === 'string' && /^https?:\/\//i.test(value)
 }
+
+/** Kane emits `""` for fields it has nothing to say about — treat those as absent. */
+export function present(value: string | undefined | null): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined
+}
+
+/** Kane emits booleans as `true`, `"1"`, `1`, … — normalise all of them. */
+export function toBool(value: unknown, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalised = value.trim().toLowerCase()
+    if (['1', 'true', 'yes'].includes(normalised)) return true
+    if (['0', 'false', 'no', ''].includes(normalised)) return false
+  }
+  return fallback
+}

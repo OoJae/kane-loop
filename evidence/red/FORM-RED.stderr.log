@@ -1,0 +1,4 @@
+Skill update available: not installed → 0.0.17 — run `kane-cli install skill`
+
+evidence: 1 status_disagrees advisory(ies) — self-explained by triaged failure record(s)
+evidence: view locally with `kane-cli evidence serve /Users/oluwademilade/.testmuai/kaneai/sessions/cb2e543e-d05e-4bbd-821a-99e70b50dcfb/evidence/efbc2c09-a571-41b0-9316-3a6b08846772.evidence`

@@ -11,6 +11,14 @@ cd "$ROOT"
 echo "→ restoring target-app/src to the seeded (buggy) state"
 git checkout -- target-app/src
 
+echo "→ un-staging the generalization flow (demo beat 2 re-stages it)"
+if [ -f "$ROOT/tests/formvalidation_test.md" ]; then
+  mkdir -p "$ROOT/tests/pending"
+  chmod +w "$ROOT/tests/formvalidation_test.md"
+  mv "$ROOT/tests/formvalidation_test.md" "$ROOT/tests/pending/"
+  [ -d "$ROOT/tests/output-formvalidation" ] && mv "$ROOT/tests/output-formvalidation" "$ROOT/tests/pending/"
+fi
+
 echo "→ clearing loop state"
 : >"$ROOT/.kane-events.ndjson"
 rm -rf "$ROOT/.kane.lock"

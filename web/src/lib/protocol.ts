@@ -72,7 +72,8 @@ export interface GateResultEvent extends LoopEventBase {
   type: 'gate_result'
   status?: Exclude<LoopStatus, 'unverified'>
   detail?: string
-  blocks?: boolean
+  /** Observed in the wild as the string "1" — treat as loosely typed. */
+  blocks?: boolean | string | number
 }
 
 export interface GateReleaseEvent extends LoopEventBase {
