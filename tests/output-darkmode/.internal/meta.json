@@ -1,0 +1,18 @@
+{
+  "commit_id": "7251d7ad-7864-410c-a174-4a9b05bf7545",
+  "test_id": "dc4401a5-e6b5-4a96-84d5-6156a0b89585",
+  "testcase_id": "01M0GPAZSPS1ZZNYC7VMHQGYBD",
+  "project_id": "01M0GNRZ1H1HMX1D1SC7NC76BB",
+  "folder_id": "01M0GP7KWWAY156NP2HP6FYTBW",
+  "org_id": "3283305",
+  "session_name": "darkmode",
+  "executions": [
+    {
+      "execution_id": "f613428d-df54-4006-815c-b3cd9c540302",
+      "run_kind": "author",
+      "status": "passed",
+      "valid": true,
+      "at": "2026-08-20T23:02:21.862Z"
+    }
+  ]
+}

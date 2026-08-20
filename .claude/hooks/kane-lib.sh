@@ -35,16 +35,23 @@ emit_event() {
   jq -nc "${args[@]}" "$filter" >>"$EVENTS" 2>/dev/null
 }
 
-# Mirror a Kane run_end into the log as a first-class Kane Loop event, so the
-# UI can render verdicts without re-deriving them from Kane's raw stream.
+# Mirror a Kane verdict into the log as a first-class Kane Loop event, so the
+# UI can render it without re-deriving anything from Kane's raw stream.
+#
+# NOTE: `credits_consumed` is the real field name (v0.8.4) — the docs and the
+# build guide both say `credits`. Both are read, real name first.
 emit_flow_end() {
-  local flow="$1" run_end="$2"
+  local flow="$1" verdict="$2" run_end="$3" credits="$4"
   printf '%s' "$run_end" | jq -c \
     --arg source "kane-loop" --arg flow "$flow" --arg phase "${KANE_PHASE:-}" \
+    --arg status "$verdict" --arg credits "$credits" \
     '{source:$source,type:"flow_end",phase:$phase,flow:$flow,ts:(now|todateiso8601),
-      status:(.status//"error"),summary:(.summary//""),one_liner:(.one_liner//""),
-      reason:(.reason//""),duration:(.duration//null),credits:(.credits//null),
-      run_dir:(.run_dir//""),test_url:(.test_url//"")}' >>"$EVENTS" 2>/dev/null
+      status:$status,summary:(.summary//""),one_liner:(.one_liner//""),
+      reason:(.reason//""),duration:(.duration//null),
+      credits:(($credits|tonumber?)//null),
+      reason_code:(.reason_code//""),
+      run_dir:(.run_dir//""),session_dir:(.session_dir//""),test_url:(.test_url//"")}' \
+    >>"$EVENTS" 2>/dev/null
 }
 
 # --- concurrency guard -------------------------------------------------------
@@ -107,28 +114,74 @@ run_kane_suite() {
     name="$(basename "$t")"
     emit_event flow_start flow "$name"
 
-    run_end="$(
-      kane-cli testmd run "$t" --agent --headless --timeout "$KANE_RUN_TIMEOUT" \
-        2>>"$STDERR_LOG" \
-        | tee -a "$EVENTS" \
-        | jq -c 'select(.type=="run_end")' 2>/dev/null | tail -1
-    )"
+    # Capture to a file rather than a pipeline, so the process exit code is
+    # readable. The exit code is the authoritative verdict:
+    #   0 passed · 1 failed · 2 error · 3 timeout
+    local raw rc credits
+    raw="$(mktemp -t kaneloop)"
+    kane-cli testmd run "$t" --agent --headless --timeout "$KANE_RUN_TIMEOUT" \
+      >"$raw" 2>>"$STDERR_LOG"
+    rc=$?
+    cat "$raw" >>"$EVENTS"
+
+    # A testmd run emits ONE run_end PER STEP, not one per file. `tail -1` alone
+    # would report the last step's verdict and miss an earlier failure, so take
+    # the first failing run_end when there is one and fall back to the last.
+    run_end="$(jq -c 'select(.type=="run_end" and .status!="passed")' <"$raw" 2>/dev/null | head -1)"
+    [ -z "$run_end" ] && run_end="$(jq -c 'select(.type=="run_end")' <"$raw" 2>/dev/null | tail -1)"
+    credits="$(jq -s '[.[] | select(.type=="run_end") | (.credits_consumed // .credits // 0)] | add // 0' <"$raw" 2>/dev/null)"
 
     if [ -z "$run_end" ]; then
-      # No terminal event: Kane errored (auth, infra, crash) rather than
-      # reporting a verdict. Surface it honestly instead of calling it a pass.
-      emit_event flow_error flow "$name" reason "no run_end event; see .kane-stderr.log"
-      KANE_FAILS="${KANE_FAILS}[$name] Kane produced no verdict (auth/infra error — see .kane-stderr.log). "
+      # No verdict at all: Kane errored (auth, infra, crash) before reporting.
+      # Surface it honestly instead of letting it read as a pass.
+      rm -f "$raw"
+      emit_event flow_error flow "$name" reason "no run_end event (exit $rc); see .kane-stderr.log"
+      KANE_FAILS="${KANE_FAILS}[$name] Kane produced no verdict (exit $rc — see .kane-stderr.log). "
       continue
     fi
 
     KANE_ANY_RAN=1
-    status="$(printf '%s' "$run_end" | jq -r '.status // "error"')"
-    emit_flow_end "$name" "$run_end"
+    case "$rc" in
+      0) status="passed" ;;
+      1) status="failed" ;;
+      3) status="timeout" ;;
+      *) status="error" ;;
+    esac
+    # Belt and braces: a non-passing run_end outranks a zero exit code.
+    if [ "$status" = "passed" ] && \
+       [ "$(printf '%s' "$run_end" | jq -r '.status // "error"')" != "passed" ]; then
+      status="failed"
+    fi
+
+    emit_flow_end "$name" "$status" "$run_end" "$credits"
 
     if [ "$status" != "passed" ]; then
-      reason="$(printf '%s' "$run_end" | jq -r '.reason // .one_liner // .summary // "no reason reported"')"
-      KANE_FAILS="${KANE_FAILS}[$name] ${reason} "
+      # Name the step that failed — the agent needs to know which assertion broke.
+      local step
+      step="$(jq -r 'select(.type=="test_md_step_end" and .status!="passed") | .step_index' <"$raw" 2>/dev/null | head -1)"
+      local heading=""
+      if [ -n "$step" ]; then
+        heading="$(jq -r --argjson i "$step" 'select(.type=="test_md_step_start" and .step_index==$i) | .heading' <"$raw" 2>/dev/null | head -1)"
+      fi
+      # Prefer the failed ASSERTION text over run_end.reason/summary. The
+      # assertion is literal and actionable ("the page background is still dark
+      # after the reload"); Kane's run-level summary can editorialise about its
+      # own wiring, which would send the agent debugging the test instead of
+      # the app.
+      local assertion
+      assertion="$(jq -r 'select(.type=="step_end" and .status=="failed") | .summary // empty' <"$raw" 2>/dev/null | head -1)"
+      assertion="${assertion#assert: }"
+      reason="$(printf '%s' "$run_end" | jq -r '.reason // .one_liner // "no reason reported"')"
+
+      if [ -n "$assertion" ]; then
+        reason="failed assertion: \"${assertion}\" (${reason})"
+      fi
+      if [ -n "$heading" ] && [ "$heading" != "null" ]; then
+        KANE_FAILS="${KANE_FAILS}[$name] step \"$heading\" ${status} — ${reason} "
+      else
+        KANE_FAILS="${KANE_FAILS}[$name] ${status} — ${reason} "
+      fi
     fi
+    rm -f "$raw"
   done
 }
