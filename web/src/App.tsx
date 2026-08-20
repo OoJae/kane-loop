@@ -160,6 +160,7 @@ export default function App() {
         value={prompt}
         onChange={setPrompt}
         onSubmit={() => void submit()}
+        onStop={() => void stop()}
         submitting={submitting}
         agentBusy={state.agentBusy}
         error={error}

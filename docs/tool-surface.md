@@ -31,7 +31,7 @@ Where the build guide's reference code disagreed with reality, reality won and t
 | Guide said | v0.8.4 reality |
 |---|---|
 | `kane-cli generate` turns English into a `_test.md` | ❌ **No `generate` command.** The authoring path is `context ingest` → `design tests`. Phase 4(a) generality must use the **template-authored + `chmod -w` fallback**, or `design tests`. |
-| `kane-cli balance` shows credits | ❌ **No `balance` command** in v0.8.4 help. Credits are reported per run in `run_end.credits`; the dashboard is the balance source. |
+| `kane-cli balance` shows credits | ❌ **No `balance` command** in v0.8.4 help. Credits are reported per run at `run_end.verdict.credits_consumed` (finding 6); the dashboard is the balance source. |
 | `--agent` emits NDJSON | ✅ Confirmed on both `run` and `testmd run` |
 | `--headless` | ✅ Confirmed on both |
 | exit codes 0/1/2/3 | ✅ Documented as pass / fail / error / timeout |
@@ -88,8 +88,10 @@ as authoritative (`0` pass / `1` fail / `2` error / `3` timeout).
 
 **2. The credits field is `credits_consumed`, not `credits`.**
 Both the build guide and `agents.md` say `credits`. Reality (v0.8.4) is
-`credits_consumed`, a float, per step — sum them for a run total.
-Observed: **~15.5 credits** for a cached 4-step run, ~34 to author from cold.
+`credits_consumed`, a float, per step — sum them for a run total. **And it is
+nested inside `run_end.verdict`, not at the top level — see finding 6, which is
+the form the hooks actually use.** Observed: ~3.15 credits for a cached red run,
+~34 to author a flow from cold.
 
 **3. `run_end.summary` can editorialise about Kane's own wiring.**
 Our first red run described itself as *"This looks like a false automation
