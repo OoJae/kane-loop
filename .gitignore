@@ -1,0 +1,18 @@
+# deps
+node_modules/
+
+# kane runtime artifacts (sealed evidence packs live in .testmuai/, sessions in ~/.testmuai/)
+.testmuai/
+.kane.lock/
+.kane-stderr.log
+
+# env & secrets
+.env
+.env.*
+
+# large recordings (key evidence is copied into evidence/, big videos are linked)
+*.mp4
+*.mov
+
+# editor/os noise
+.DS_Store
