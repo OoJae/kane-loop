@@ -16,3 +16,6 @@ node_modules/
 
 # editor/os noise
 .DS_Store
+
+# scratch from visual verification
+.playwright-mcp/
