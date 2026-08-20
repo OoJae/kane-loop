@@ -147,7 +147,16 @@ run_kane_suite() {
       3) status="timeout" ;;
       *) status="error" ;;
     esac
-    # Belt and braces: a non-passing run_end outranks a zero exit code.
+
+    # test_md_summary.overall_status is the file-level verdict and the cleanest
+    # signal Kane emits for a testmd run. It has agreed with the exit code on
+    # every observed run; where they disagree, a non-pass wins.
+    local overall
+    overall="$(jq -r 'select(.type=="test_md_summary") | .overall_status // empty' <"$raw" 2>/dev/null | tail -1)"
+    if [ -n "$overall" ] && [ "$overall" != "passed" ]; then
+      status="failed"
+    fi
+    # A non-passing per-step run_end also outranks a zero exit code.
     if [ "$status" = "passed" ] && \
        [ "$(printf '%s' "$run_end" | jq -r '.status // "error"')" != "passed" ]; then
       status="failed"

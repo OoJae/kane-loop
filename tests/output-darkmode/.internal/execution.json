@@ -2,24 +2,24 @@
   "test_id": "dc4401a5-e6b5-4a96-84d5-6156a0b89585",
   "version": "v4",
   "auto_heal_version": "AH2",
-  "session_id": "7251d7ad-7864-410c-a174-4a9b05bf7545",
+  "session_id": "42c012e3-fa02-484d-97ee-07876cffb80e",
   "org_id": "3283305",
   "user_id": "3453002",
   "url": "http://localhost:5173",
-  "start_timestamp": "2026-08-20T23:01:27.361Z",
-  "end_timestamp": "2026-08-20T23:02:20.577Z",
+  "start_timestamp": "2026-08-20T23:10:17.867Z",
+  "end_timestamp": "2026-08-20T23:11:17.192Z",
   "status": "success",
-  "commit_id": "7251d7ad-7864-410c-a174-4a9b05bf7545",
+  "commit_id": "42c012e3-fa02-484d-97ee-07876cffb80e",
   "instructions": [
     {
       "content_type": "generative_block",
-      "instruction_id": "generative_block_cec67c8de8994421ad37a8f71be55a96",
-      "generative_id": "cec67c8de8994421ad37a8f71be55a96",
+      "instruction_id": "generative_block_777ea778689f4e519486bffca4fda2ff",
+      "generative_id": "777ea778689f4e519486bffca4fda2ff",
       "objective": "Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.",
       "status": "success",
       "children": [
         {
-          "instruction_id": "151b7662-0917-4340-a616-2c19d63d9f0b",
+          "instruction_id": "b672e9ea-d0a2-4f99-9e6b-96d1d3d236b9",
           "instruction_class": "driver_action",
           "module_id": "",
           "instruction": "Navigate to http://localhost:5173",
@@ -31,11 +31,11 @@
           "operations": [
             {
               "operation_id": "52390dba-d17e-4ede-a6cd-254b2eba637a",
-              "instruction_id": "151b7662-0917-4340-a616-2c19d63d9f0b",
+              "instruction_id": "b672e9ea-d0a2-4f99-9e6b-96d1d3d236b9",
               "instruction": "Navigate to http://localhost:5173",
               "intent": "Navigate to http://localhost:5173",
-              "operation_start": "2026-08-20T23:01:33.798578+00:00",
-              "operation_end": "2026-08-20T23:01:34.118Z",
+              "operation_start": "2026-08-20T23:10:28.659605+00:00",
+              "operation_end": "2026-08-20T23:10:28.922Z",
               "status": "success",
               "command": "OPEN",
               "name": "",
@@ -57,7 +57,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/52390dba-d17e-4ede-a6cd-254b2eba637a.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/52390dba-d17e-4ede-a6cd-254b2eba637a.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -149,8 +149,8 @@
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:01:33.798578+00:00",
-          "end_timestamp": "2026-08-20T23:01:34.118Z",
+          "start_timestamp": "2026-08-20T23:10:28.659605+00:00",
+          "end_timestamp": "2026-08-20T23:10:28.922Z",
           "type": "agent_generated",
           "tags": [],
           "html_paths": [],
@@ -176,7 +176,7 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "cec67c8de8994421ad37a8f71be55a96",
+          "generative_id": "777ea778689f4e519486bffca4fda2ff",
           "plan_id": "",
           "generative_objective": "Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.",
           "error_message": "",
@@ -196,13 +196,13 @@
     },
     {
       "content_type": "generative_block",
-      "instruction_id": "generative_block_14220c9547d847c58b2560a9da28cfe8",
-      "generative_id": "14220c9547d847c58b2560a9da28cfe8",
+      "instruction_id": "generative_block_7e6d5f9c59d647fba59a6012c8514481",
+      "generative_id": "7e6d5f9c59d647fba59a6012c8514481",
       "objective": "Click the dark mode toggle in the header. Assert the page background is now a dark colour.",
       "status": "success",
       "children": [
         {
-          "instruction_id": "aa43b776-742f-48f1-a7c7-7e796fe16eab",
+          "instruction_id": "0dc8b5b6-97a0-4785-9a85-a30421639d97",
           "instruction_class": "driver_action",
           "module_id": "",
           "instruction": "Clicking the dark mode toggle button",
@@ -214,11 +214,11 @@
           "operations": [
             {
               "operation_id": "b2249211-cca7-4bbc-86df-04077032b853",
-              "instruction_id": "aa43b776-742f-48f1-a7c7-7e796fe16eab",
+              "instruction_id": "0dc8b5b6-97a0-4785-9a85-a30421639d97",
               "instruction": "Clicking the dark mode toggle button",
               "intent": "Clicking the dark mode toggle button",
-              "operation_start": "2026-08-20T23:01:34.021682+00:00",
-              "operation_end": "2026-08-20T23:01:34.113Z",
+              "operation_start": "2026-08-20T23:10:29.042297+00:00",
+              "operation_end": "2026-08-20T23:10:29.125Z",
               "status": "success",
               "command": "CLICK",
               "name": "",
@@ -240,7 +240,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/b2249211-cca7-4bbc-86df-04077032b853.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/b2249211-cca7-4bbc-86df-04077032b853.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -348,7 +348,7 @@
                 "viewport_width": 1920,
                 "viewport_height": 993,
                 "scale_factor": null,
-                "raw_image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/b2249211-cca7-4bbc-86df-04077032b853.webp",
+                "raw_image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/b2249211-cca7-4bbc-86df-04077032b853.png",
                 "raw_image_sas_url": "",
                 "annotated_image_url": "",
                 "annotated_image_sas_url": ""
@@ -357,8 +357,8 @@
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:01:34.021682+00:00",
-          "end_timestamp": "2026-08-20T23:01:34.113Z",
+          "start_timestamp": "2026-08-20T23:10:29.042297+00:00",
+          "end_timestamp": "2026-08-20T23:10:29.125Z",
           "type": "agent_generated",
           "tags": [],
           "html_paths": [],
@@ -384,7 +384,7 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "14220c9547d847c58b2560a9da28cfe8",
+          "generative_id": "7e6d5f9c59d647fba59a6012c8514481",
           "plan_id": "",
           "generative_objective": "Click the dark mode toggle in the header. Assert the page background is now a dark colour.",
           "error_message": "",
@@ -395,7 +395,7 @@
           "reasoning": "PRIMARY: dark mode toggle button; role=button; text=\"Toggle dark mode\" | HINTS: position=top-right; container=header"
         },
         {
-          "instruction_id": "7e81face-7454-4321-9312-0f745228b106",
+          "instruction_id": "67cb044c-0d86-49eb-aa51-91e83745c0a6",
           "instruction_class": "driver_action",
           "module_id": "",
           "instruction": "Checking whether the page background is a dark colour",
@@ -407,11 +407,11 @@
           "operations": [
             {
               "operation_id": "79481cb1-52af-4648-8532-50dcf679b606",
-              "instruction_id": "7e81face-7454-4321-9312-0f745228b106",
+              "instruction_id": "67cb044c-0d86-49eb-aa51-91e83745c0a6",
               "instruction": "Checking whether the page background is a dark colour",
               "intent": "Checking whether the page background is a dark colour",
-              "operation_start": "2026-08-20T23:01:40.624231+00:00",
-              "operation_end": "2026-08-20T23:01:46.677Z",
+              "operation_start": "2026-08-20T23:10:36.143382+00:00",
+              "operation_end": "2026-08-20T23:10:42.685Z",
               "status": "success",
               "command": "VISION_QUERY",
               "name": "",
@@ -433,7 +433,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/79481cb1-52af-4648-8532-50dcf679b606.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/79481cb1-52af-4648-8532-50dcf679b606.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -527,8 +527,8 @@
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:01:40.624231+00:00",
-          "end_timestamp": "2026-08-20T23:01:46.677Z",
+          "start_timestamp": "2026-08-20T23:10:36.143382+00:00",
+          "end_timestamp": "2026-08-20T23:10:42.685Z",
           "type": "agent_generated",
           "tags": [],
           "html_paths": [],
@@ -554,7 +554,7 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "14220c9547d847c58b2560a9da28cfe8",
+          "generative_id": "7e6d5f9c59d647fba59a6012c8514481",
           "plan_id": "",
           "generative_objective": "Click the dark mode toggle in the header. Assert the page background is now a dark colour.",
           "error_message": "",
@@ -565,7 +565,7 @@
           "reasoning": "the page background is now a dark colour"
         },
         {
-          "instruction_id": "555950bd-e633-4c83-9386-354999e5f3f5",
+          "instruction_id": "e691913e-d09d-4130-9eac-fdfff5fbd266",
           "instruction_class": "non_driver_action",
           "module_id": "",
           "instruction": "Assertion check",
@@ -623,11 +623,11 @@
           "operations": [
             {
               "operation_id": "915568a7-3bdb-4276-b6ec-de0655b2cc21",
-              "instruction_id": "555950bd-e633-4c83-9386-354999e5f3f5",
+              "instruction_id": "e691913e-d09d-4130-9eac-fdfff5fbd266",
               "instruction": "Assertion check",
               "intent": "Assertion check",
-              "operation_start": "2026-08-20T23:01:40.670842+00:00",
-              "operation_end": "2026-08-20T23:01:40.670Z",
+              "operation_start": "2026-08-20T23:10:36.195880+00:00",
+              "operation_end": "2026-08-20T23:10:36.196Z",
               "status": "success",
               "command": "ASSERTION",
               "name": "",
@@ -649,7 +649,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/915568a7-3bdb-4276-b6ec-de0655b2cc21.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/915568a7-3bdb-4276-b6ec-de0655b2cc21.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -816,8 +816,8 @@
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:01:40.670842+00:00",
-          "end_timestamp": "2026-08-20T23:01:40.670Z",
+          "start_timestamp": "2026-08-20T23:10:36.195880+00:00",
+          "end_timestamp": "2026-08-20T23:10:36.196Z",
           "type": "agent_generated",
           "tags": [],
           "html_paths": [],
@@ -843,7 +843,7 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "14220c9547d847c58b2560a9da28cfe8",
+          "generative_id": "7e6d5f9c59d647fba59a6012c8514481",
           "plan_id": "",
           "generative_objective": "Click the dark mode toggle in the header. Assert the page background is now a dark colour.",
           "error_message": "",
@@ -863,40 +863,40 @@
     },
     {
       "content_type": "generative_block",
-      "instruction_id": "generative_block_ca47115ca04440ab989efad202954d33",
-      "generative_id": "ca47115ca04440ab989efad202954d33",
-      "objective": "Reload the page. Assert the page background is still dark after the reload.",
+      "instruction_id": "generative_block_82858fe8c8aa4b99a148fdc5465f770c",
+      "generative_id": "82858fe8c8aa4b99a148fdc5465f770c",
+      "objective": "Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.",
       "status": "success",
       "children": [
         {
-          "instruction_id": "6b9522c4-ae80-45f9-8ced-85b1f2b1df85",
+          "instruction_id": "d9fddd34-b92d-49e0-8237-34b74f8914eb",
           "instruction_class": "driver_action",
           "module_id": "",
-          "instruction": "Reloading the current page by pressing F5",
-          "command": "SENDKEYS",
+          "instruction": "Navigate to http://localhost:5173",
+          "command": "OPEN",
           "error": null,
           "parent_instruction_id": "",
           "classification_layer_resp": [],
           "classification_error": {},
           "operations": [
             {
-              "operation_id": "57710c67-fef8-4d1a-9e7d-c54176b2084f",
-              "instruction_id": "6b9522c4-ae80-45f9-8ced-85b1f2b1df85",
-              "instruction": "Reloading the current page by pressing F5",
-              "intent": "Reloading the current page by pressing F5",
-              "operation_start": "2026-08-20T23:01:55.560849+00:00",
-              "operation_end": "2026-08-20T23:01:55.570Z",
+              "operation_id": "9f0c48c0-850e-4eb1-af3d-84d854139721",
+              "instruction_id": "d9fddd34-b92d-49e0-8237-34b74f8914eb",
+              "instruction": "Navigate to http://localhost:5173",
+              "intent": "Navigate to http://localhost:5173",
+              "operation_start": "2026-08-20T23:10:36.297626+00:00",
+              "operation_end": "2026-08-20T23:10:36.369Z",
               "status": "success",
-              "command": "SENDKEYS",
+              "command": "OPEN",
               "name": "",
               "target": "",
-              "value": "F5",
+              "value": "http://localhost:5173",
               "message": "",
               "operation_dict": "",
               "frame": "",
               "error_message": "",
               "code_snippet": "",
-              "sub_instruction_obj": "{\"operation\":\"Reloading the current page by pressing F5\",\"agent\":\"Operation Agent\",\"operation_dict\":{\"operation_type\":\"SENDKEYS\"},\"reasoning\":\"PRIMARY: reload the current page by pressing the F5 key\",\"variable\":{},\"secrets\":{},\"params\":{}}",
+              "sub_instruction_obj": "{\"operation\":\"Navigate to http://localhost:5173\",\"agent\":\"Operation Agent\",\"operation_dict\":{\"operation_type\":\"OPEN\",\"url\":\"http://localhost:5173\"},\"reasoning\":\"Navigate to http://localhost:5173\",\"variable\":{},\"secrets\":{},\"params\":{}}",
               "test_id": "",
               "test_version": "",
               "action": "",
@@ -907,11 +907,11 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/57710c67-fef8-4d1a-9e7d-c54176b2084f.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/9f0c48c0-850e-4eb1-af3d-84d854139721.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
-              "url": "",
+              "url": "http://localhost:5173",
               "navigation_direction": "",
               "tagified_image_url": "",
               "query_variable_name": "",
@@ -995,12 +995,12 @@
               "api_data": {},
               "output_variables": {},
               "visual_context": null,
-              "reasoning": "PRIMARY: reload the current page by pressing the F5 key"
+              "reasoning": "Navigate to http://localhost:5173"
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:01:55.560849+00:00",
-          "end_timestamp": "2026-08-20T23:01:55.570Z",
+          "start_timestamp": "2026-08-20T23:10:36.297626+00:00",
+          "end_timestamp": "2026-08-20T23:10:36.369Z",
           "type": "agent_generated",
           "tags": [],
           "html_paths": [],
@@ -1026,36 +1026,51 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "ca47115ca04440ab989efad202954d33",
+          "generative_id": "82858fe8c8aa4b99a148fdc5465f770c",
           "plan_id": "",
-          "generative_objective": "Reload the page. Assert the page background is still dark after the reload.",
+          "generative_objective": "Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.",
           "error_message": "",
           "error_code": "",
           "reason": "",
           "title": "",
           "used_variables": [],
-          "reasoning": "PRIMARY: reload the current page by pressing the F5 key"
-        },
+          "reasoning": "Navigate to http://localhost:5173"
+        }
+      ],
+      "error_message": null,
+      "error_code": null,
+      "result_code": 100,
+      "bifurcation_context": [],
+      "approach_reason": [],
+      "one_liner": null
+    },
+    {
+      "content_type": "generative_block",
+      "instruction_id": "generative_block_51ff3ea70ed84462bed56d035afa5e85",
+      "generative_id": "51ff3ea70ed84462bed56d035afa5e85",
+      "objective": "Assert that the page background is still dark.",
+      "status": "success",
+      "children": [
         {
-          "instruction_id": "17faa845-8fbc-4cf7-91eb-3d7cfa316016",
+          "instruction_id": "177fd965-7741-431d-a96d-6d5438a75d7f",
           "instruction_class": "driver_action",
           "module_id": "",
           "instruction": "Checking whether the page background is dark",
-          "command": "VISION_QUERY",
+          "command": "TEXTUAL_ANALYZER",
           "error": null,
           "parent_instruction_id": "",
           "classification_layer_resp": [],
           "classification_error": {},
           "operations": [
             {
-              "operation_id": "0283209e-5b8f-4ab4-988c-faaf3629e545",
-              "instruction_id": "17faa845-8fbc-4cf7-91eb-3d7cfa316016",
+              "operation_id": "7c5c6193-b553-47f6-b364-389ceeb70ff2",
+              "instruction_id": "177fd965-7741-431d-a96d-6d5438a75d7f",
               "instruction": "Checking whether the page background is dark",
               "intent": "Checking whether the page background is dark",
-              "operation_start": "2026-08-20T23:02:16.711417+00:00",
+              "operation_start": "2026-08-20T23:11:13.617926+00:00",
               "operation_end": "",
               "status": "success",
-              "command": "VISION_QUERY",
+              "command": "TEXTUAL_ANALYZER",
               "name": "",
               "target": "",
               "value": "",
@@ -1064,7 +1079,7 @@
               "frame": "",
               "error_message": "",
               "code_snippet": "",
-              "sub_instruction_obj": "{\"operation\":\"Checking whether the page background is dark\",\"agent\":\"Vision Agent\",\"operation_dict\":{\"operation_type\":\"VISION_QUERY\"},\"reasoning\":\"the page background is still dark after the reload\",\"variable\":{},\"secrets\":{},\"params\":{}}",
+              "sub_instruction_obj": "{\"operation\":\"Checking whether the page background is dark\",\"agent\":\"Operation Agent\",\"operation_dict\":{\"operation_type\":\"TEXTUAL_ANALYZER\"},\"reasoning\":\"whether the page background is dark\",\"variable\":{},\"secrets\":{},\"params\":{},\"code_js\":\"(() => { const n = el(2).closest('.app') || el(2).ownerDocument.body; const c = getComputedStyle(n).backgroundColor; const m = c.match(/\\\\d+(?:\\\\.\\\\d+)?/g); if (!m || m.length < 3) return null; const [r,g,b] = m.slice(0,3).map(Number); const luminance = 0.2126*r + 0.7152*g + 0.0722*b; return luminance < 64; })()\",\"wrapped_js\":\"(els) => {\\n  const __m = {2: 0};\\n  const el = (i) => els[__m[i]];\\n  const __v = ((() => { const n = el(2).closest('.app') || el(2).ownerDocument.body; const c = getComputedStyle(n).backgroundColor; const m = c.match(/\\\\d+(?:\\\\.\\\\d+)?/g); if (!m || m.length < 3) return null; const [r,g,b] = m.slice(0,3).map(Number); const luminance = 0.2126*r + 0.7152*g + 0.0722*b; return luminance < 64; })());\\n  return (typeof __v === 'boolean' ? String(__v) : __v);\\n}\",\"locators\":[\"internal:role=heading[name=\\\"Kane Notes\\\"i]\"],\"operator\":\"equals\",\"transforms\":[],\"query\":\"whether the page background is dark\",\"expected_value\":\"true\",\"needs_unit_conversion\":false,\"condition\":\"the page background is still dark\"}",
               "test_id": "",
               "test_version": "",
               "action": "",
@@ -1075,7 +1090,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/0283209e-5b8f-4ab4-988c-faaf3629e545.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/7c5c6193-b553-47f6-b364-389ceeb70ff2.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -1083,7 +1098,7 @@
               "navigation_direction": "",
               "tagified_image_url": "",
               "query_variable_name": "page_background_dark_check",
-              "query_variable_value": "dark",
+              "query_variable_value": "true",
               "query_variable_type": "",
               "expected_value": "",
               "queried_value": "",
@@ -1162,14 +1177,14 @@
               "until_settle_ms": 0,
               "api_data": {},
               "output_variables": {
-                "page_background_dark_check": "dark"
+                "page_background_dark_check": "true"
               },
               "visual_context": null,
-              "reasoning": "the page background is still dark after the reload"
+              "reasoning": "whether the page background is dark"
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:02:16.711417+00:00",
+          "start_timestamp": "2026-08-20T23:11:13.617926+00:00",
           "end_timestamp": "",
           "type": "agent_generated",
           "tags": [],
@@ -1196,18 +1211,18 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "ca47115ca04440ab989efad202954d33",
+          "generative_id": "51ff3ea70ed84462bed56d035afa5e85",
           "plan_id": "",
-          "generative_objective": "Reload the page. Assert the page background is still dark after the reload.",
+          "generative_objective": "Assert that the page background is still dark.",
           "error_message": "",
           "error_code": "",
           "reason": "",
           "title": "",
           "used_variables": [],
-          "reasoning": "the page background is still dark after the reload"
+          "reasoning": "whether the page background is dark"
         },
         {
-          "instruction_id": "2fa09655-6509-49be-8819-f6bc197371ed",
+          "instruction_id": "afeea3c7-57df-469f-91f6-52c5a5a5a1b7",
           "instruction_class": "non_driver_action",
           "module_id": "",
           "instruction": "Assertion check",
@@ -1223,36 +1238,32 @@
                 "assertion_tree": {
                   "sub_results": [
                     {
-                      "description": "the page background is still dark after the reload",
+                      "description": "the page background is still dark",
                       "passed": true,
                       "operator": "equals",
-                      "transforms": [
-                        "lowercase"
-                      ],
+                      "transforms": [],
                       "json_path": null,
-                      "expected": "dark",
+                      "expected": "true",
                       "extracted_value": "{{page_background_dark_check}}",
                       "store_key": "page_background_dark_check",
                       "variable_refs": {
-                        "{{page_background_dark_check}}": "dark"
+                        "{{page_background_dark_check}}": "true"
                       }
                     }
                   ],
                   "sub_checks": [
                     {
-                      "description": "the page background is still dark after the reload",
+                      "description": "the page background is still dark",
                       "store_key": "page_background_dark_check",
-                      "expected_value": "dark",
+                      "expected_value": "true",
                       "extracted_value": "{{page_background_dark_check}}",
                       "operator": "equals",
-                      "transforms": [
-                        "lowercase"
-                      ]
+                      "transforms": []
                     }
                   ],
                   "composite_operator": "and",
                   "verification": "",
-                  "claim": "the page background is still dark after the reload",
+                  "claim": "the page background is still dark",
                   "operator": [],
                   "assertion_operands": [],
                   "left_operand": null,
@@ -1268,11 +1279,11 @@
           "classification_error": {},
           "operations": [
             {
-              "operation_id": "85b942fd-2551-463a-bcbb-5d1f0f0c64d4",
-              "instruction_id": "2fa09655-6509-49be-8819-f6bc197371ed",
+              "operation_id": "5e1b9e23-699d-4932-b9aa-2a6d845eacd2",
+              "instruction_id": "afeea3c7-57df-469f-91f6-52c5a5a5a1b7",
               "instruction": "Assertion check",
               "intent": "Assertion check",
-              "operation_start": "2026-08-20T23:02:17.297625+00:00",
+              "operation_start": "2026-08-20T23:11:14.234905+00:00",
               "operation_end": "",
               "status": "success",
               "command": "ASSERTION",
@@ -1295,7 +1306,7 @@
               "update_time_stamp": "",
               "locator_variable": "",
               "locator_variable_name": "",
-              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/85b942fd-2551-463a-bcbb-5d1f0f0c64d4.webp",
+              "image_url": "https://prodauteurartefacts.blob.core.windows.net/test-screenshots/test_screenshots/untagged_screenshot/5e1b9e23-699d-4932-b9aa-2a6d845eacd2.png",
               "alternative_xpaths": [],
               "attribute": "",
               "value_description": "",
@@ -1361,63 +1372,57 @@
                 "operands": [],
                 "sub_results": [
                   {
-                    "description": "the page background is still dark after the reload",
+                    "description": "the page background is still dark",
                     "passed": true,
                     "operator": "equals",
-                    "transforms": [
-                      "lowercase"
-                    ],
+                    "transforms": [],
                     "json_path": null,
-                    "expected": "dark",
+                    "expected": "true",
                     "extracted_value": "{{page_background_dark_check}}",
                     "store_key": "page_background_dark_check",
                     "variable_refs": {
-                      "{{page_background_dark_check}}": "dark"
+                      "{{page_background_dark_check}}": "true"
                     }
                   }
                 ],
                 "sub_checks": [
                   {
-                    "description": "the page background is still dark after the reload",
+                    "description": "the page background is still dark",
                     "store_key": "page_background_dark_check",
-                    "expected_value": "dark",
+                    "expected_value": "true",
                     "extracted_value": "{{page_background_dark_check}}",
                     "operator": "equals",
-                    "transforms": [
-                      "lowercase"
-                    ]
+                    "transforms": []
                   }
                 ],
                 "composite_operator": "and",
-                "verification": "after the reload, the current page background is still dark",
-                "claim": "the page background is still dark after the reload"
+                "verification": "the current page shows a dark background",
+                "claim": "the page background is still dark"
               },
               "assertion_tree": {
                 "assertion_id": "assert_cp_1",
                 "status": "passed",
-                "description": "the page background is still dark after the reload",
+                "description": "the page background is still dark",
                 "sub_results": [
                   {
-                    "description": "the page background is still dark after the reload",
+                    "description": "the page background is still dark",
                     "passed": true,
                     "operator": "equals",
-                    "transforms": [
-                      "lowercase"
-                    ],
+                    "transforms": [],
                     "json_path": null,
-                    "expected": "dark",
+                    "expected": "true",
                     "extracted_value": "{{page_background_dark_check}}",
                     "store_key": "page_background_dark_check",
                     "variable_refs": {
-                      "{{page_background_dark_check}}": "dark"
+                      "{{page_background_dark_check}}": "true"
                     }
                   }
                 ],
                 "composite_operator": "and",
                 "passed": true,
-                "step": 3,
+                "step": 2,
                 "is_final": true,
-                "verification": "after the reload, the current page background is still dark",
+                "verification": "the current page shows a dark background",
                 "error_message": null,
                 "duration_ms": 0
               },
@@ -1453,7 +1458,7 @@
             }
           ],
           "status": "success",
-          "start_timestamp": "2026-08-20T23:02:17.297625+00:00",
+          "start_timestamp": "2026-08-20T23:11:14.234905+00:00",
           "end_timestamp": "",
           "type": "agent_generated",
           "tags": [],
@@ -1480,9 +1485,9 @@
           "network_assertion_content": {},
           "screenshot_command": "",
           "smartui_contents": {},
-          "generative_id": "ca47115ca04440ab989efad202954d33",
+          "generative_id": "51ff3ea70ed84462bed56d035afa5e85",
           "plan_id": "",
-          "generative_objective": "Reload the page. Assert the page background is still dark after the reload.",
+          "generative_objective": "Assert that the page background is still dark.",
           "error_message": "",
           "error_code": "",
           "reason": "",
@@ -1496,9 +1501,9 @@
       "result_code": null,
       "bifurcation_context": [],
       "approach_reason": [
-        "You asked to reload the page and confirm that the background stayed dark.",
-        "The page was reloaded on localhost.",
-        "After the reload, the page background was still dark, so the task was completed successfully."
+        "Reviewed the page at localhost:5173 to check whether the background was still dark.",
+        "Confirmed that the page background remained dark.",
+        "Finished on the site's home page with the requested visual condition satisfied."
       ],
       "one_liner": null
     }
@@ -1506,7 +1511,7 @@
   "modules": [],
   "uploaded_files": [],
   "test_params": [],
-  "test_level_variables": "[{\"name\":\"page_background_dark_colour_check\",\"value\":\"true\",\"value_type\":\"test_level\",\"variable_description\":\"ANALYZE result\"},{\"name\":\"page_background_dark_check\",\"value\":\"dark\",\"value_type\":\"test_level\",\"variable_description\":\"ANALYZE result\"}]",
+  "test_level_variables": "[{\"name\":\"page_background_dark_colour_check\",\"value\":\"true\",\"value_type\":\"test_level\",\"variable_description\":\"ANALYZE result\"},{\"name\":\"page_background_dark_check\",\"value\":\"true\",\"value_type\":\"test_level\",\"variable_description\":\"ANALYZE result\"}]",
   "test_global_variables": [],
   "max_network_wait": 0,
   "wait_buffer": 0,

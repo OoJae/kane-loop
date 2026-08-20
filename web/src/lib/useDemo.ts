@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DEMO_SCRIPT, type DemoStep } from './demo'
+import type { DemoScript, DemoStep } from './demo'
 import type { Action } from './store'
 import type { NormalisedMessage } from './protocol'
 
@@ -8,8 +8,7 @@ export interface DemoControls {
   total: number
   playing: boolean
   finished: boolean
-  nextLabel: string | null
-  lastLabel: string | null
+  script: DemoScript
   play: () => void
   pause: () => void
   step: () => void
@@ -38,15 +37,22 @@ function dispatchStep(step: DemoStep, dispatch: (action: Action) => void): void 
 }
 
 /**
- * Drives DEMO_SCRIPT through the same reducer the live socket uses.
+ * Drives a demo script through the same reducer the live socket uses.
  * Pause/step exist so a rehearsal (or a screenshot) can be held on a beat.
  */
-export function useDemo(enabled: boolean, dispatch: (action: Action) => void): DemoControls {
+export function useDemo(
+  enabled: boolean,
+  dispatch: (action: Action) => void,
+  script: DemoScript,
+): DemoControls {
+  const steps = script.steps
   const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(true)
   const timerRef = useRef<number | null>(null)
   const dispatchRef = useRef(dispatch)
   dispatchRef.current = dispatch
+  const stepsRef = useRef(steps)
+  stepsRef.current = steps
 
   const clearTimer = useCallback(() => {
     if (timerRef.current !== null) {
@@ -60,23 +66,24 @@ export function useDemo(enabled: boolean, dispatch: (action: Action) => void): D
       clearTimer()
       return
     }
-    if (index >= DEMO_SCRIPT.length) {
+    if (index >= steps.length) {
       clearTimer()
       setPlaying(false)
       return
     }
-    const step = DEMO_SCRIPT[index]
+    const current = steps[index]
     timerRef.current = window.setTimeout(() => {
-      dispatchStep(step, dispatchRef.current)
-      setIndex((current) => current + 1)
-    }, step.after)
+      dispatchStep(current, dispatchRef.current)
+      setIndex((value) => value + 1)
+    }, current.after)
     return clearTimer
-  }, [enabled, playing, index, clearTimer])
+  }, [enabled, playing, index, clearTimer, steps])
 
   const step = useCallback(() => {
     setIndex((current) => {
-      if (current >= DEMO_SCRIPT.length) return current
-      dispatchStep(DEMO_SCRIPT[current], dispatchRef.current)
+      const list = stepsRef.current
+      if (current >= list.length) return current
+      dispatchStep(list[current], dispatchRef.current)
       return current + 1
     })
   }, [])
@@ -86,18 +93,20 @@ export function useDemo(enabled: boolean, dispatch: (action: Action) => void): D
       clearTimer()
       setPlaying(false)
       setIndex((current) => {
-        if (target <= current) {
+        const list = stepsRef.current
+        const bounded = Math.max(0, Math.min(target, list.length))
+        if (bounded <= current) {
           // Rewind: replay from a clean slate up to the target.
           dispatchRef.current({ kind: 'reset' })
-          for (let i = 0; i < target; i += 1) {
-            dispatchStep(DEMO_SCRIPT[i], dispatchRef.current)
+          for (let i = 0; i < bounded; i += 1) {
+            dispatchStep(list[i], dispatchRef.current)
           }
-          return target
+          return bounded
         }
-        for (let i = current; i < Math.min(target, DEMO_SCRIPT.length); i += 1) {
-          dispatchStep(DEMO_SCRIPT[i], dispatchRef.current)
+        for (let i = current; i < bounded; i += 1) {
+          dispatchStep(list[i], dispatchRef.current)
         }
-        return Math.min(target, DEMO_SCRIPT.length)
+        return bounded
       })
     },
     [clearTimer],
@@ -112,11 +121,10 @@ export function useDemo(enabled: boolean, dispatch: (action: Action) => void): D
 
   return {
     index,
-    total: DEMO_SCRIPT.length,
+    total: steps.length,
     playing,
-    finished: index >= DEMO_SCRIPT.length,
-    nextLabel: index < DEMO_SCRIPT.length ? DEMO_SCRIPT[index].label : null,
-    lastLabel: index > 0 ? DEMO_SCRIPT[index - 1].label : null,
+    finished: index >= steps.length,
+    script,
     play: () => setPlaying(true),
     pause: () => setPlaying(false),
     step,

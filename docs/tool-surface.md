@@ -74,11 +74,64 @@ Steps author on first run and replay from cache "in seconds with no LLM cost". *
 re-authors step N and every step after it** — this is why `tests/*_test.md` wording is frozen
 after Gate 1 and the files are made read-only.
 
-### ⏳ Still to verify (blocked on `kane-cli login`)
-- [ ] A real captured `run_end` line → `evidence/first-run.ndjson`
-- [ ] Observed exit codes from a real red and a real green run
-- [ ] Cached-replay timing and credit delta (run the same testmd twice)
-- [ ] Whether headless Chrome reaches `localhost:5173` cleanly
+### ⚠️ Findings from real runs that no doc would have told us
+
+These cost several runs to learn and they invalidate parts of the build guide's
+reference code. All three are fixed in `.claude/hooks/kane-lib.sh`.
+
+**1. `run_end` fires once PER STEP, not once per file.**
+A four-step testmd emits four `run_end` events. The guide's
+`jq 'select(.type=="run_end")' | tail -1` therefore reports only the *last*
+step's verdict and silently misses an earlier failure. We now take the **first
+failing** `run_end`, fall back to the last, and treat the **process exit code**
+as authoritative (`0` pass / `1` fail / `2` error / `3` timeout).
+
+**2. The credits field is `credits_consumed`, not `credits`.**
+Both the build guide and `agents.md` say `credits`. Reality (v0.8.4) is
+`credits_consumed`, a float, per step — sum them for a run total.
+Observed: **~15.5 credits** for a cached 4-step run, ~34 to author from cold.
+
+**3. `run_end.summary` can editorialise about Kane's own wiring.**
+Our first red run described itself as *"This looks like a false automation
+failure"* and advised inspecting "the final verification wiring". Injecting that
+into the agent would send it debugging the test instead of the app. The hook now
+leads the injected message with the **literal failed assertion** taken from the
+failing `step_end` (`assert: …`), plus the step heading. Result:
+
+> `[darkmode_test.md] step "Verify dark mode survived" failed — failed assertion: "the page background is dark" (Checkpoint assertion failed: "the page background is dark")`
+
+**4. Reload and assertion must be SEPARATE testmd steps.** ← the important one
+A single step saying *"Reload the page. Assert the background is still dark"*
+is **not reliable**:
+- once, Kane pressed F5 and asserted against a screenshot captured before the
+  reload had repainted → asserted **dark** → false pass;
+- once, it merely "waited to prepare to reload", never reloaded, and passed
+  trivially.
+
+Splitting them into `## Load the page again from scratch` (a real navigation)
+and `## Verify dark mode survived` (assertion only) makes the verdict correct
+and deterministic, because Kane takes a fresh screenshot at each step boundary.
+**Phrase the assertion step with its failure condition spelled out** ("if the
+background is light, dark mode did not persist and this step must fail").
+
+### Confirmed by real runs
+
+| Fact | Observed |
+|---|---|
+| Auth | OAuth, profile "O.O. Jae" (`captainjoe550`), env prod. **Token expiry showed 2026-08-20 — re-run `kane-cli login --oauth` if runs start failing.** |
+| Exit code on red | **1**, with step 4 `failed` |
+| Exit code on green | see `evidence/green/` |
+| Cached replay | **~60–87 s** for the 4-step flow, well inside the 300 s hook timeout |
+| Cold authoring | ~4 min, ~34 credits |
+| Project | auto-created "Kane Loop" on first run (`project_folder_auto_defaulted` event) |
+| Artifacts | `~/.testmuai/kaneai/sessions/<id>/runs/<n>/` — `run_dir` in `run_end` points at it |
+| localhost | headless Chrome reaches `localhost:5173` with no special flags ✅ |
+
+Extra event types seen in the wild (not in the docs list): `test_md_step_start`,
+`test_md_step_end`, `run_start`, `step_start`, `step_end`, `step_event`,
+`describe_trigger`, `project_folder_auto_defaulted`. `step_event.event` values
+include `screenshot`, `evaluation`, `page_manager`, `reasoning`, `action`,
+`assertion`, `cm_init`.
 
 ---
 
