@@ -599,14 +599,17 @@ poll.unref();
 // because Vite's HMR socket lives on the same path, and without it the app in
 // the iframe would never pick up the agent's edits.
 const TARGET_ORIGIN = process.env.KANE_TARGET_URL ?? "http://127.0.0.1:5173";
+// /app is the iframe's entry point. The rest are Vite's own dev paths, which the
+// app's HTML requests ROOT-absolute (/@vite/client, /src/main.tsx): served from
+// this origin they hit the SPA fallback and the iframe renders blank white.
+// None of them collide with the built UI, which lives under /assets.
+app.use("/app", createProxyMiddleware({ target: TARGET_ORIGIN, changeOrigin: true, ws: true }));
 app.use(
-  "/app",
   createProxyMiddleware({
+    pathFilter: ["/@vite/**", "/@react-refresh", "/@fs/**", "/@id/**", "/src/**", "/node_modules/**"],
     target: TARGET_ORIGIN,
     changeOrigin: true,
     ws: true,
-    // No pathRewrite on purpose: Vite runs with --base=/app/, so it already
-    // expects that prefix. Stripping it here would 404 every asset.
   }),
 );
 

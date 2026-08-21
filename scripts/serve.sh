@@ -76,10 +76,11 @@ fi
 # Vite dev, not a static build: the whole point is that the agent edits src and
 # the running page reflects it before Kane looks at it.
 log "starting target app on :${APP_PORT}"
-# --base matters: the orchestrator proxies this under /app, and without it Vite
-# emits root-absolute asset URLs (/@vite/client, /src/main.tsx) that resolve
-# against the orchestrator instead of Vite — the iframe rendered blank white.
-(cd target-app && npx vite --host 127.0.0.1 --port "$APP_PORT" --strictPort --base=/app/) &
+# Root base, deliberately. The frozen Kane flow opens the app at the ROOT url and
+# replays from a cached recording, so moving the app to a sub-path would break
+# the very flow this deployment exists to run. The iframe is made to work by
+# proxying Vite's dev paths instead (see server/index.ts).
+(cd target-app && npx vite --host 127.0.0.1 --port "$APP_PORT" --strictPort) &
 APP_PID=$!
 
 trap 'kill "$APP_PID" "${PROXY_PID:-}" 2>/dev/null || true' EXIT INT TERM
