@@ -604,14 +604,25 @@ const TARGET_ORIGIN = process.env.KANE_TARGET_URL ?? "http://127.0.0.1:5173";
 // this origin they hit the SPA fallback and the iframe renders blank white.
 // None of them collide with the built UI, which lives under /assets.
 app.use("/app", createProxyMiddleware({ target: TARGET_ORIGIN, changeOrigin: true, ws: true }));
-app.use(
-  createProxyMiddleware({
-    pathFilter: ["/@vite/**", "/@react-refresh", "/@fs/**", "/@id/**", "/src/**", "/node_modules/**"],
-    target: TARGET_ORIGIN,
-    changeOrigin: true,
-    ws: true,
-  }),
-);
+
+// An explicit prefix test rather than pathFilter globs: those silently failed to
+// match, so every module request fell through to the SPA fallback and the
+// browser refused the reply ("Expected a JavaScript-or-Wasm module script but
+// the server responded with a MIME type of text/html"). Mounting with app.use
+// would strip the prefix Vite needs, so this leaves req.url untouched.
+const VITE_PREFIXES = ["/@vite", "/@react-refresh", "/@fs", "/@id", "/src/", "/node_modules/"];
+const viteAssetProxy = createProxyMiddleware({
+  target: TARGET_ORIGIN,
+  changeOrigin: true,
+  ws: true,
+});
+app.use((req, res, next) => {
+  if (VITE_PREFIXES.some((prefix) => req.url.startsWith(prefix))) {
+    viteAssetProxy(req, res, next);
+    return;
+  }
+  next();
+});
 
 // Serve the built UI from this process when it exists, so a hosted deployment is
 // a single origin and a single service rather than three.
