@@ -4,27 +4,52 @@ import { TargetPane } from './components/TargetPane'
 import { TranscriptPane } from './components/TranscriptPane'
 import { VerifierPane } from './components/VerifierPane'
 import { DemoBanner } from './components/DemoBanner'
+import { ReplayBanner } from './components/ReplayBanner'
 import { initialState, reducer } from './lib/store'
 import { useSocket } from './lib/useSocket'
 import { useDemo } from './lib/useDemo'
 import { RUN_ENDPOINT, SERVER_URL, STOP_ENDPOINT, WS_URL } from './lib/config'
 import { getDemoScript, type DemoScript } from './lib/demo'
+import { findRecording, loadRecording, type Recording } from './lib/replay'
 import type { NormalisedMessage } from './lib/protocol'
 
 /**
  * Demo mode is opt-in only: `?demo=1` (red → green loop) or `?demo=gate`
  * (the Stop gate blocking "done"). Anything else means live mode.
  */
-function useDemoMode(): { demo: boolean; script: DemoScript } {
+const EMPTY_SCRIPT: DemoScript = { name: 'recording', steps: [], marks: [] }
+
+function useDemoMode(): { demo: boolean; script: DemoScript; recording: Recording | undefined } {
   return useMemo(() => {
-    const value = new URLSearchParams(window.location.search).get('demo')
+    const params = new URLSearchParams(window.location.search)
+    const replayParam = params.get('replay')
+    if (replayParam !== null && replayParam !== '0' && replayParam !== 'false') {
+      const recording = findRecording(replayParam)
+      if (recording !== undefined) return { demo: true, script: EMPTY_SCRIPT, recording }
+    }
+    const value = params.get('demo')
     const demo = value !== null && value !== '0' && value !== 'false'
-    return { demo, script: getDemoScript(demo ? value : null) }
+    return { demo, script: getDemoScript(demo ? value : null), recording: undefined }
   }, [])
 }
 
 export default function App() {
-  const { demo, script } = useDemoMode()
+  const { demo, script, recording } = useDemoMode()
+
+  // A recording is fetched, so the script starts empty and arrives async. Same
+  // driver either way — useDemo does not care where the steps came from.
+  const [replaySteps, setReplaySteps] = useState<DemoScript | null>(null)
+  const [replayError, setReplayError] = useState<string | null>(null)
+  useEffect(() => {
+    if (recording === undefined) return
+    let cancelled = false
+    loadRecording(recording)
+      .then((steps) => { if (!cancelled) setReplaySteps(steps) })
+      .catch((err: unknown) => {
+        if (!cancelled) setReplayError(err instanceof Error ? err.message : 'Could not load the recording')
+      })
+    return () => { cancelled = true }
+  }, [recording])
   const [state, dispatch] = useReducer(reducer, initialState)
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -49,7 +74,16 @@ export default function App() {
   }, [])
 
   const connection = useSocket(WS_URL, handleMessage, !demo)
-  const demoControls = useDemo(demo, dispatch, script)
+  const demoControls = useDemo(demo, dispatch, recording !== undefined ? (replaySteps ?? EMPTY_SCRIPT) : script)
+
+  // The recording is fetched, so the driver first sees an empty script, decides
+  // it has finished, and stops. Kick it once the real steps arrive.
+  const startedReplayRef = useRef(false)
+  useEffect(() => {
+    if (replaySteps === null || startedReplayRef.current) return
+    startedReplayRef.current = true
+    demoControls.restart()
+  }, [replaySteps, demoControls])
 
   /* ------------------------------------------------------------- elapsed */
   const [now, setNow] = useState(() => Date.now())
@@ -146,7 +180,14 @@ export default function App() {
 
   return (
     <div className="grid-bg flex h-full min-h-screen flex-col gap-3 bg-ink p-3 xl:h-screen xl:gap-3.5 xl:p-4">
-      {demo ? (
+      {recording !== undefined ? <ReplayBanner recording={recording} /> : null}
+      {replayError !== null ? (
+        <div className="rounded-lg border-2 border-red bg-red/10 px-4 py-2 text-[13px] text-red-soft">
+          Could not load the recording: {replayError}. The loop itself runs locally — see the repo
+          for the one-command quickstart.
+        </div>
+      ) : null}
+      {demo && recording === undefined ? (
         <>
           <DemoBanner controls={demoControls} />
           <div
@@ -167,6 +208,7 @@ export default function App() {
         onDismissError={() => setError(null)}
         connection={connection}
         demo={demo}
+        recorded={recording !== undefined}
       />
 
       <main className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.14fr)_minmax(0,1.02fr)] xl:grid-rows-[minmax(0,1fr)]">

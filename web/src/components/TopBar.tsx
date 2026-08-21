@@ -15,6 +15,7 @@ interface TopBarProps {
   onDismissError: () => void
   connection: Connection
   demo: boolean
+  recorded?: boolean
 }
 
 export function TopBar({
@@ -28,6 +29,7 @@ export function TopBar({
   onDismissError,
   connection,
   demo,
+  recorded = false,
 }: TopBarProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -94,7 +96,7 @@ export function TopBar({
           ) : null}
         </form>
 
-        <ConnectionBadge connection={connection} demo={demo} />
+        <ConnectionBadge connection={connection} demo={demo} recorded={recorded} />
       </div>
 
       {error ? (

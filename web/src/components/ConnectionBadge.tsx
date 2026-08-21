@@ -5,16 +5,19 @@ import type { Connection } from '../lib/useSocket'
 export function ConnectionBadge({
   connection,
   demo,
+  recorded = false,
 }: {
   connection: Connection
   demo: boolean
+  /** True when replaying a committed recording rather than the scripted demo. */
+  recorded?: boolean
 }) {
   if (demo) {
     return (
       <div className="flex shrink-0 items-center gap-2 rounded-xl border border-amber/40 bg-amber/10 px-3 py-2">
         <span className="h-2 w-2 rounded-full bg-amber" aria-hidden />
         <span className="font-mono text-[11px] font-bold tracking-[0.14em] text-amber uppercase">
-          socket off · demo
+          {recorded ? 'socket off · recorded' : 'socket off · demo'}
         </span>
       </div>
     )

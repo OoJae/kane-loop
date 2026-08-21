@@ -146,9 +146,15 @@ evidence."*
 rather than implied. The agent is allowed `Bash(npm:*)` and can write `target-app/package.json`, so
 a lifecycle script is an unguarded path to the filesystem. The manifest still catches the *result*
 (the checksum moves, and the gate blocks), but the guard does not prevent the attempt. Narrowing
-the tool grant is the real fix and is deliberately not being done hours before a deadline. The
-honest claim is: **the obvious routes are denied, and anything that gets through is detected at the
-gate** — not that tampering is impossible.
+the tool grant is the real fix. The honest claim is: **the obvious routes are denied, and anything
+that gets through is detected at the gate** — not that tampering is impossible.
+
+The guard is deliberately blunt, and it will occasionally deny a *read* — it judges the command
+string, so `jq 'a|b' file` or a `git` command whose message merely mentions the flow directory gets
+refused. That is the intended trade: a denied read costs a retry, a missed write costs the whole
+guarantee. **Maintaining the hooks themselves needs `KANE_HOOKS_OFF=1 claude`** — hooks inherit
+Claude Code's environment rather than a Bash call's, so an agent cannot set that for itself, but a
+human can. It exists because the guard once locked out its own author.
 
 This isn't hypothetical. [ImpossibleBench](https://arxiv.org/abs/2510.20270) builds task variants
 where the spec and the tests contradict each other, so any pass is necessarily a spec-violating
