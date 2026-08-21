@@ -30,3 +30,6 @@ docs/kane-loop-master-prompt.md
 
 # local demo run sheet + submission text
 DEMO-AND-SUBMISSION.md
+
+# oracle seal — per-session state, not a committed artifact
+.kane-oracle.sha256

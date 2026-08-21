@@ -39,6 +39,11 @@ if ! acquire_lock; then
   exit 0
 fi
 
+# Seal the oracle on the first verified save of a session. Sealing here rather
+# than at the gate matters: the gate runs last, so a seal taken there would be
+# taken *after* any tampering and would happily certify it.
+[ -f "$ROOT/.kane-oracle.sha256" ] || oracle_seal
+
 emit_event verify_start file "$FILE"
 run_kane_suite
 

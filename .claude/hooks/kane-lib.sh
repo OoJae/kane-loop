@@ -233,7 +233,11 @@ oracle_manifest() {
   # (which silently hashed nothing at all the first time round).
   # Sorting the shasum output rather than the filenames keeps it deterministic
   # without needing a null-aware sort.
-  find "$ROOT/tests" -type f \( -name '*_test.md' -o -name '*.ndjson' -o -name '*.json' \) \
+  # Only the oracle itself: the objectives, and the recorded actions Kane
+  # replays. meta.json / execution.json are Kane's own run bookkeeping and are
+  # rewritten on every single run, so including them would flag Kane's normal
+  # operation as tampering.
+  find "$ROOT/tests" -type f \( -name '*_test.md' -o -name 'actions.ndjson' \) \
     -not -path '*/pending/*' -print0 2>/dev/null \
     | xargs -0 shasum -a 256 2>/dev/null \
     | LC_ALL=C sort \
