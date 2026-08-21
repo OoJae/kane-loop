@@ -529,6 +529,27 @@ app.post("/run", (req, res) => {
   });
 });
 
+/**
+ * Tail of Kane's stderr, behind the same key as /run. A hosted container has no
+ * shell for the operator, and "exit 2, see .kane-stderr.log" is useless advice
+ * when the file is inside a container you cannot open.
+ */
+app.get("/diag", (req, res) => {
+  if (RUN_SECRET !== "" && (req.get("x-kane-key") ?? "") !== RUN_SECRET) {
+    res.status(401).json({ ok: false, error: "key required" });
+    return;
+  }
+  const file = path.join(ROOT, ".kane-stderr.log");
+  let stderrTail = "";
+  try {
+    const buf = fs.readFileSync(file, "utf8");
+    stderrTail = buf.slice(-4000);
+  } catch {
+    stderrTail = "(no .kane-stderr.log yet)";
+  }
+  res.json({ ok: true, stderrTail });
+});
+
 app.post("/stop", (_req, res) => {
   const result = stopRun();
   res.json({ ok: true, ...result });

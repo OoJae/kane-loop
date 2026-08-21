@@ -50,5 +50,12 @@ RUN cp target-app/.seed/App.tsx target-app/src/App.tsx \
  && ! grep -q localStorage target-app/src/App.tsx \
  && chmod 444 tests/*_test.md
 
+# Chromium refuses to start as root without --no-sandbox, and Kane exposes no
+# flag for it. The Playwright image ships a non-root pwuser for exactly this;
+# /app has to be writable by it because the agent edits files and the hooks
+# write the event log beside them.
+RUN chown -R pwuser:pwuser /app
+USER pwuser
+
 EXPOSE 8080
 CMD ["./scripts/serve.sh"]
