@@ -51,13 +51,21 @@ export function TopBar({
     <header className="shrink-0">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
         <div className="flex shrink-0 items-center gap-3">
+          {/* The mark: a loop caught mid-close. The green arc runs at a tighter
+              radius so its end tucks inside the red one's start — the ends pass
+              rather than meet. No gradient between them: a verdict has no
+              in-between, the way an exit code doesn't. Same geometry as
+              site/public/brand/mark.svg. */}
           <span
-            className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-panel text-[20px] shadow-[0_0_30px_-10px_rgba(52,227,155,0.6)]"
+            className="grid h-11 w-11 place-items-center rounded-xl border border-line bg-panel shadow-[0_0_30px_-10px_rgba(52,227,155,0.6)]"
             aria-hidden
           >
-            <span className="bg-gradient-to-br from-red to-green bg-clip-text text-transparent">
-              ↻
-            </span>
+            <svg viewBox="0 0 64 64" className="h-6 w-6">
+              <g fill="none" strokeWidth="7" strokeLinecap="round">
+                <path d="M 32 6 A 26 26 0 0 1 32 58" stroke="#ff3b52" />
+                <path d="M 32 58 A 22 22 0 0 1 32 14" stroke="#34e39b" />
+              </g>
+            </svg>
           </span>
           <div className="leading-none">
             <h1 className="text-[22px] leading-none font-black tracking-[-0.03em] text-ice">
