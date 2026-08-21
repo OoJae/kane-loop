@@ -32,8 +32,29 @@ else
   log "WARNING: KANE_USERNAME/KANE_ACCESS_KEY not set — Kane cannot verify anything"
 fi
 
-if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-  log "WARNING: ANTHROPIC_API_KEY not set — POST /run will fail to start the agent"
+# --- model endpoint ----------------------------------------------------------
+# Claude Code can be pointed at any Anthropic-compatible endpoint, with two
+# catches this deployment hit:
+#   1. it validates the model name locally and refuses anything outside its own
+#      list, while the provider here accepts only its own name — so a tiny shim
+#      rewrites `model` in flight (scripts/model-proxy.mjs).
+#   2. ANTHROPIC_API_KEY sends x-api-key and makes Claude Code authenticate
+#      against Anthropic itself (401 before any request leaves). Third-party
+#      endpoints need ANTHROPIC_AUTH_TOKEN, which sends Authorization: Bearer.
+if [ -n "${UPSTREAM_BASE_URL:-}" ] && [ -n "${UPSTREAM_MODEL:-}" ]; then
+  PROXY_PORT="${PROXY_PORT:-4010}"
+  log "starting model shim on :${PROXY_PORT} (${UPSTREAM_MODEL})"
+  PROXY_PORT="$PROXY_PORT" node scripts/model-proxy.mjs &
+  PROXY_PID=$!
+  export ANTHROPIC_BASE_URL="http://127.0.0.1:${PROXY_PORT}"
+  for _ in $(seq 1 20); do
+    curl -sf -o /dev/null "http://127.0.0.1:${PROXY_PORT}/" 2>/dev/null && break
+    sleep 0.25
+  done
+fi
+
+if [ -z "${ANTHROPIC_AUTH_TOKEN:-}" ] && [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+  log "WARNING: no ANTHROPIC_AUTH_TOKEN/ANTHROPIC_API_KEY — POST /run cannot start the agent"
 fi
 
 if [ -z "${KANE_RUN_SECRET:-}" ]; then
@@ -47,7 +68,7 @@ log "starting target app on :${APP_PORT}"
 (cd target-app && npx vite --host 127.0.0.1 --port "$APP_PORT" --strictPort) &
 APP_PID=$!
 
-trap 'kill "$APP_PID" 2>/dev/null || true' EXIT INT TERM
+trap 'kill "$APP_PID" "${PROXY_PID:-}" 2>/dev/null || true' EXIT INT TERM
 
 for _ in $(seq 1 60); do
   if curl -sf -o /dev/null "http://127.0.0.1:${APP_PORT}"; then
