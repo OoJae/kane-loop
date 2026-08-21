@@ -605,7 +605,8 @@ app.use(
     target: TARGET_ORIGIN,
     changeOrigin: true,
     ws: true,
-    pathRewrite: { "^/app": "" },
+    // No pathRewrite on purpose: Vite runs with --base=/app/, so it already
+    // expects that prefix. Stripping it here would 404 every asset.
   }),
 );
 
