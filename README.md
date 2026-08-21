@@ -45,7 +45,14 @@ The same host runs the loop **live** in the console at
 [/console](https://kane-loop-production.up.railway.app/console/) — the app pane is real and
 interactive. Starting a run needs a key (it spends real Kane credits and executes code in the
 container), so the Run button is inert without one; the key ships with the submission.
-[The root URL](https://kane-loop-production.up.railway.app) is the project's landing page.
+[The root URL](https://kane-loop-production.up.railway.app) is the project's landing page, and
+alongside it:
+
+| | |
+|---|---|
+| [/how-it-works](https://kane-loop-production.up.railway.app/how-it-works) | the mechanism long-form — what each hook prevents, with the code |
+| [/evidence](https://kane-loop-production.up.railway.app/evidence) | both committed runs, every verdict, and the `jq` that reproduces the tables |
+| [/log](https://kane-loop-production.up.railway.app/log) | the retractions: what this repo got wrong, and the commit that fixed each one |
 
 ## Quickstart — the real thing, locally
 
