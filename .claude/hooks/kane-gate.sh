@@ -13,23 +13,34 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KANE_PHASE="gate"
 INPUT="$(cat)"
 
-# 1) NON-NEGOTIABLE: if we are already continuing because this gate blocked,
-#    let Claude stop. Without this the gate re-fires forever, burning credits
-#    and hanging the demo.
-if [ "$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)" = "true" ]; then
-  emit_event gate_release reason "stop_hook_active — gate already engaged this turn"
-  exit 0
-fi
-
-# 2) Escape hatch. If the gate has blocked repeatedly and the agent still can't
-#    get to green, stop fighting: hand it back to a human rather than loop.
+# 1) Bound the gate with a COUNTER, not with stop_hook_active.
+#
+#    stop_hook_active is true on every stop attempt after the gate has blocked
+#    once. Releasing on it unconditionally — the obvious reading, and what this
+#    hook used to do — means the gate blocks exactly ONCE and the agent may
+#    finish red on its second attempt, with KANE_MAX_BLOCKS never reached. That
+#    quietly falsifies the whole point of the gate.
+#
+#    The counter gives the same protection against an infinite loop (it is
+#    strictly increasing and capped) while letting the gate actually hold.
+STOP_ACTIVE="$(printf '%s' "$INPUT" | jq -r '.stop_hook_active // false' 2>/dev/null)"
 MAX_BLOCKS="${KANE_MAX_BLOCKS:-4}"
 BLOCKS=0
 [ -f "$FAILCOUNT" ] && BLOCKS="$(cat "$FAILCOUNT" 2>/dev/null || echo 0)"
 case "$BLOCKS" in ''|*[!0-9]*) BLOCKS=0 ;; esac
 
+# Safety net: the counter is only a bound if we can persist it. If the file is
+# not writable, fall back to the old stop_hook_active behaviour rather than risk
+# a gate that never lets go.
+if ! printf '%s' "$BLOCKS" >"$FAILCOUNT" 2>/dev/null; then
+  if [ "$STOP_ACTIVE" = "true" ]; then
+    emit_event gate_release reason "cannot persist the block counter; honouring stop_hook_active"
+    exit 0
+  fi
+fi
+
 if [ "$BLOCKS" -ge "$MAX_BLOCKS" ]; then
-  emit_event gate_release reason "escape hatch: blocked $BLOCKS times, releasing for manual review"
+  emit_event gate_release reason "escape hatch: blocked $BLOCKS times, releasing for manual review" blocks "$BLOCKS"
   rm -f "$FAILCOUNT"
   exit 0
 fi

@@ -106,9 +106,14 @@ Scopes to `target-app/src/**` so editing a README never spawns Chrome. Takes an 
 `hookSpecificOutput.additionalContext` — capped at 4,000 chars, actionable reason first.
 
 **[`kane-gate.sh`](.claude/hooks/kane-gate.sh) — Stop.** The spine. Re-runs the suite when the agent
-tries to finish and blocks while anything is red. Guarded by `stop_hook_active` so it can never
-loop forever, plus a max-4-blocks escape hatch that hands off for manual review rather than
-fighting. It emits **both** documented block shapes *and* exits 2, so a version difference in how
+tries to finish and blocks while anything is red — **up to four times**, then it hands off for
+manual review rather than fighting forever.
+
+That bound is a counter, deliberately, and it is the subtle part. `stop_hook_active` is true on
+every stop attempt after the gate has blocked once, so releasing on it — the obvious reading, and
+what this hook did at first — means the gate blocks exactly **once** and the agent can finish red
+on its second attempt. A strictly-increasing capped counter gives the same protection against an
+infinite loop while letting the gate actually hold. It emits **both** documented block shapes *and* exits 2, so a version difference in how
 Claude Code reads a block can't silently let the agent through.
 
 **[`kane-guard.sh`](.claude/hooks/kane-guard.sh) — PreToolUse.** The reason a green means anything.
