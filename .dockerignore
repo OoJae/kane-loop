@@ -1,0 +1,19 @@
+node_modules
+**/node_modules
+web/dist
+.git
+.github
+
+# runtime state — the container makes its own
+.kane-events.ndjson
+.kane-oracle.sha256
+.kane-failcount
+.kane-stderr.log
+.kane.lock
+.testmuai
+
+# local scratch
+.playwright-mcp
+*.mp4
+*.mov
+DEMO-AND-SUBMISSION.md

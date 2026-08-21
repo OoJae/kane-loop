@@ -26,6 +26,7 @@ import type { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 
 import cors from "cors";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import express from "express";
 import { WebSocketServer, type WebSocket } from "ws";
 
@@ -76,6 +77,17 @@ const WEB_PORT = new URL(UI_ORIGIN).port || "4321";
 // Bind loopback only. With no host argument Node listens on 0.0.0.0, which put
 // "spawn an AI agent that edits my files" on every network this laptop joins.
 const HOST = process.env.KANE_HOST ?? "127.0.0.1";
+
+/**
+ * Shared secret for POST /run, required whenever this is reachable off-localhost.
+ * Hosted, that endpoint spends real money — every click starts an agent on the
+ * operator's Anthropic key and burns Kane credits — and the agent it starts
+ * edits files and runs npm. Unauthenticated, it is a wallet with a button on it.
+ * Unset locally, so nothing changes for `./scripts/dev.sh`.
+ */
+const RUN_SECRET = process.env.KANE_RUN_SECRET ?? "";
+/** Built UI (web/dist), served by this process so one host serves everything. */
+const WEB_DIST = process.env.KANE_WEB_DIST ?? path.join(ROOT, "web", "dist");
 
 const REPLAY_LINES = 2000;
 /** Cap on how much of the tail we read back for replay. */
@@ -400,7 +412,16 @@ const app = express();
 // machine, so the origin check is a security boundary, not a formality:
 // reflecting any origin would let any page the user happens to visit start an
 // agent that edits their files.
-const ALLOWED_ORIGINS = new Set([UI_ORIGIN, `http://127.0.0.1:${WEB_PORT}`]);
+const ALLOWED_ORIGINS = new Set(
+  [
+    UI_ORIGIN,
+    `http://127.0.0.1:${WEB_PORT}`,
+    // When the UI is served by this same process there is one origin, and it is
+    // whatever the host assigned.
+    process.env.KANE_PUBLIC_ORIGIN ?? "",
+    process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : "",
+  ].filter((o) => o !== ""),
+);
 app.use(
   cors({
     origin(origin, cb) {
@@ -453,6 +474,21 @@ app.get("/health", (_req, res) => {
 });
 
 app.post("/run", (req, res) => {
+  // Gate the only endpoint that spends money. Constant-time-ish compare is
+  // overkill for a demo secret, but a plain mismatch must not leak length.
+  if (RUN_SECRET !== "") {
+    const supplied = req.get("x-kane-key") ?? "";
+    if (supplied.length !== RUN_SECRET.length || supplied !== RUN_SECRET) {
+      res.status(401).json({
+        ok: false,
+        error:
+          "This instance requires a key. Kane Loop runs locally with one command — see the repo — " +
+          "or use the key supplied with the submission.",
+      });
+      return;
+    }
+  }
+
   const body: unknown = req.body;
   const prompt =
     typeof body === "object" && body !== null && "prompt" in body
@@ -536,6 +572,30 @@ wss.on("connection", (socket: WebSocket) => {
 
 const poll = setInterval(scheduleDrain, POLL_INTERVAL_MS);
 poll.unref();
+
+// Hosted, the target app runs inside this container on 5173 and is not reachable
+// from outside, so the iframe would show nothing. Proxy it under /app — ws:true
+// because Vite's HMR socket lives on the same path, and without it the app in
+// the iframe would never pick up the agent's edits.
+const TARGET_ORIGIN = process.env.KANE_TARGET_URL ?? "http://127.0.0.1:5173";
+app.use(
+  "/app",
+  createProxyMiddleware({
+    target: TARGET_ORIGIN,
+    changeOrigin: true,
+    ws: true,
+    pathRewrite: { "^/app": "" },
+  }),
+);
+
+// Serve the built UI from this process when it exists, so a hosted deployment is
+// a single origin and a single service rather than three.
+if (fs.existsSync(WEB_DIST)) {
+  app.use(express.static(WEB_DIST, { index: "index.html" }));
+  app.get(/^\/(?!run$|stop$|health$|evidence\/|app\/?).*/, (_req, res) => {
+    res.sendFile(path.join(WEB_DIST, "index.html"));
+  });
+}
 
 server.listen(PORT, HOST, () => {
   startTailer();

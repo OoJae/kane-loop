@@ -8,7 +8,7 @@ import { ReplayBanner } from './components/ReplayBanner'
 import { initialState, reducer } from './lib/store'
 import { useSocket } from './lib/useSocket'
 import { useDemo } from './lib/useDemo'
-import { RUN_ENDPOINT, SERVER_URL, STOP_ENDPOINT, WS_URL } from './lib/config'
+import { RUN_ENDPOINT, RUN_KEY, SERVER_URL, STOP_ENDPOINT, WS_URL } from './lib/config'
 import { getDemoScript, type DemoScript } from './lib/demo'
 import { findRecording, loadRecording, type Recording } from './lib/replay'
 import type { NormalisedMessage } from './lib/protocol'
@@ -128,9 +128,20 @@ export default function App() {
     try {
       const response = await fetch(RUN_ENDPOINT, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...(RUN_KEY === '' ? {} : { 'x-kane-key': RUN_KEY }),
+        },
         body: JSON.stringify({ prompt: text }),
       })
+
+      if (response.status === 401) {
+        setError(
+          'This hosted instance is key-gated so it cannot be used to spend the ' +
+            'operator\'s API credits. Clone the repo and run it locally — one command.',
+        )
+        return
+      }
 
       if (response.status === 409) {
         const body = (await response.json().catch(() => null)) as {
