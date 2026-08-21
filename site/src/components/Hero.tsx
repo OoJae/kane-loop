@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
+import { SiteNav, CONSOLE_URL } from './Chrome'
 
-const CONSOLE_URL = '/console/'
-const REPO = 'https://github.com/OoJae/kane-loop'
 
 /**
  * The hero is a thesis, not a banner: the claim an agent makes, and the answer.
@@ -28,31 +27,7 @@ export function Hero() {
       ref={root}
       className="relative mx-auto flex min-h-[100svh] max-w-[1400px] flex-col px-5 pt-8 lg:px-10"
     >
-      <nav className="flex items-center justify-between" aria-label="Main">
-        <a href="/" className="flex items-center gap-2.5" aria-label="Kane Loop, home">
-          <svg viewBox="0 0 64 64" className="h-7 w-7" aria-hidden>
-            <g fill="none" strokeWidth="7" strokeLinecap="round">
-              <path d="M 32 6 A 26 26 0 0 1 32 58" stroke="#ff3b52" data-draw strokeDasharray="200" />
-              <path d="M 32 58 A 22 22 0 0 1 32 14" stroke="#34e39b" data-draw strokeDasharray="200" />
-            </g>
-          </svg>
-          <span className="display text-[15px]" style={{ fontStretch: '110%' }}>
-            Kane&nbsp;Loop
-          </span>
-        </a>
-
-        <div className="label flex items-center gap-5 sm:gap-7">
-          <a className="transition-colors hover:text-[color:var(--color-ice)]" href="#loop">
-            the loop
-          </a>
-          <a className="hidden transition-colors hover:text-[color:var(--color-ice)] sm:inline" href="#receipts">
-            receipts
-          </a>
-          <a className="transition-colors hover:text-[color:var(--color-ice)]" href={REPO} target="_blank" rel="noreferrer">
-            github ↗
-          </a>
-        </div>
-      </nav>
+      <SiteNav drawMark />
 
       {/* The display line spans the full width — at Expanded 11rem it is wider
           than any column, and clipping the green "it." kills the whole joke. */}

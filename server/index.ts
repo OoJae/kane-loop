@@ -452,7 +452,15 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "1mb" }));
 
-app.use("/evidence", express.static(EVIDENCE_DIR, { fallthrough: true, index: false }));
+// redirect:false matters: express.static answers a bare directory with a 301 to
+// its trailing-slash form, which meant `/evidence` — the landing site's receipts
+// page — was swallowed by the evidence FILE mount before routing ever saw it.
+// With it off, `/evidence` falls through to the SPA and `/evidence/ui/x.ndjson`
+// still serves the file.
+app.use(
+  "/evidence",
+  express.static(EVIDENCE_DIR, { fallthrough: true, index: false, redirect: false }),
+);
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -696,9 +704,16 @@ if (fs.existsSync(WEB_DIST)) {
   });
 }
 
+// The landing site's own routes. Listing them lets an unknown path answer with
+// a real 404 status instead of 200-and-a-page-that-says-404, which is the usual
+// SPA compromise and a slightly embarrassing one for this project specifically.
+const SITE_ROUTES = new Set(["/", "/how-it-works", "/evidence", "/log"]);
+
 if (fs.existsSync(SITE_DIST)) {
   app.use(express.static(SITE_DIST, { index: "index.html" }));
-  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|console|recordings\/|evidence\/|app\/?).*/, (_req, res) => {
+  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|console|recordings\/|evidence\/|app\/?).*/, (req, res) => {
+    const route = req.path.replace(/\/+$/, "") || "/";
+    if (!SITE_ROUTES.has(route)) res.status(404);
     res.sendFile(path.join(SITE_DIST, "index.html"));
   });
 } else if (fs.existsSync(WEB_DIST)) {

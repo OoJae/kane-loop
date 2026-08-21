@@ -3,6 +3,7 @@ import Lenis from 'lenis'
 import { Hero } from './components/Hero'
 import { LoopScene } from './components/LoopScene'
 import { Mechanism, Receipts, TryIt } from './components/Sections'
+import { SiteFooter } from './components/Chrome'
 
 export default function App() {
   useEffect(() => {
@@ -32,12 +33,7 @@ export default function App() {
         <Receipts />
         <TryIt />
       </main>
-      <footer className="border-t border-[color:var(--color-line)]">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-5 py-8 lg:px-10">
-          <p className="label">Kane Loop · built for the Kane CLI hackathon</p>
-          <p className="label">real browser · real verdict</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }
