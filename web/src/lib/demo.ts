@@ -115,15 +115,6 @@ export const DEMO_SCRIPT: DemoStep[] = [
     }),
   },
   {
-    after: 400,
-    label: 'PostToolUse hook fires',
-    message: agent({
-      type: 'hook_started',
-      hook_event_name: 'PostToolUse',
-      command: '.claude/hooks/kane-verify.sh',
-    }),
-  },
-  {
     after: 300,
     label: 'verify_start (loop #1)',
     message: kane({
@@ -152,8 +143,8 @@ export const DEMO_SCRIPT: DemoStep[] = [
         'After reload the computed background of <body> was rgb(244, 245, 247); expected a dark background. The toggle state was not persisted.',
       duration: 34.2,
       credits: 3,
-      run_dir: 'evidence/red/run-20260821-101455-darkmode',
-      test_url: 'https://app.testmuai.com/runs/demo-red-run',
+      run_dir: 'evidence/red/RED.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -165,11 +156,6 @@ export const DEMO_SCRIPT: DemoStep[] = [
       status: 'red',
       detail: RED_DETAIL,
     }),
-  },
-  {
-    after: 400,
-    label: 'hook_response',
-    message: agent({ type: 'hook_response', hook_event_name: 'PostToolUse' }),
   },
   {
     after: 1400,
@@ -186,15 +172,6 @@ export const DEMO_SCRIPT: DemoStep[] = [
       old_string: "document.body.dataset.theme = isDark ? 'dark' : 'light'",
       new_string:
         "document.body.dataset.theme = isDark ? 'dark' : 'light'\n    localStorage.setItem('theme', isDark ? 'dark' : 'light')",
-    }),
-  },
-  {
-    after: 400,
-    label: 'PostToolUse hook fires',
-    message: agent({
-      type: 'hook_started',
-      hook_event_name: 'PostToolUse',
-      command: '.claude/hooks/kane-verify.sh',
     }),
   },
   {
@@ -225,8 +202,8 @@ export const DEMO_SCRIPT: DemoStep[] = [
       reason: 'Body background was rgb(10, 11, 13) after reload, as expected.',
       duration: 21.8,
       credits: 1,
-      run_dir: 'evidence/green/run-20260821-101702-darkmode',
-      test_url: 'https://app.testmuai.com/runs/demo-green-run',
+      run_dir: 'evidence/green/GREEN.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -257,8 +234,8 @@ export const DEMO_SCRIPT: DemoStep[] = [
       reason: 'Cached replay, no regression.',
       duration: 8.4,
       credits: 0,
-      run_dir: 'evidence/green/run-20260821-101744-gate',
-      test_url: 'https://app.testmuai.com/runs/demo-gate-run',
+      run_dir: 'evidence/green/GREEN.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -316,15 +293,6 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
     }),
   },
   {
-    after: 400,
-    label: 'PostToolUse hook fires',
-    message: agent({
-      type: 'hook_started',
-      hook_event_name: 'PostToolUse',
-      command: '.claude/hooks/kane-verify.sh',
-    }),
-  },
-  {
     after: 300,
     label: 'verify_start (loop #1)',
     message: kane({ type: 'verify_start', phase: 'verify', file: 'target-app/src/App.tsx' }),
@@ -347,8 +315,8 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
       reason: 'Nothing was ever written to localStorage, so the read finds nothing.',
       duration: 31.7,
       credits: 3,
-      run_dir: 'evidence/red/run-20260821-104012-darkmode',
-      test_url: 'https://app.testmuai.com/runs/demo-gate-red',
+      run_dir: 'evidence/red/RED.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -368,15 +336,6 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
       "That should be it — dark mode now initialises from localStorage. I'm done here.",
     ),
   },
-  {
-    after: 500,
-    label: 'Stop hook fires',
-    message: agent({
-      type: 'hook_started',
-      hook_event_name: 'Stop',
-      command: '.claude/hooks/kane-gate.sh',
-    }),
-  },
   { after: 300, label: 'gate_start', message: kane({ type: 'gate_start', phase: 'gate' }) },
   {
     after: 2600,
@@ -391,8 +350,8 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
       reason: 'Body background was rgb(244, 245, 247) after reload.',
       duration: 24.9,
       credits: 1,
-      run_dir: 'evidence/red/run-20260821-104121-gate',
-      test_url: 'https://app.testmuai.com/runs/demo-gate-block',
+      run_dir: 'evidence/red/RED.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -424,15 +383,6 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
     }),
   },
   {
-    after: 400,
-    label: 'PostToolUse hook fires',
-    message: agent({
-      type: 'hook_started',
-      hook_event_name: 'PostToolUse',
-      command: '.claude/hooks/kane-verify.sh',
-    }),
-  },
-  {
     after: 300,
     label: 'verify_start (loop #2)',
     message: kane({ type: 'verify_start', phase: 'verify', file: 'target-app/src/App.tsx' }),
@@ -455,8 +405,8 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
       reason: 'Body background was rgb(10, 11, 13) after reload, as expected.',
       duration: 20.3,
       credits: 1,
-      run_dir: 'evidence/green/run-20260821-104402-darkmode',
-      test_url: 'https://app.testmuai.com/runs/demo-gate-green',
+      run_dir: 'evidence/green/GREEN.ndjson',
+      test_url: '',
     }),
   },
   {
@@ -483,8 +433,8 @@ export const GATE_DEMO_SCRIPT: DemoStep[] = [
       reason: 'Cached replay, no regression.',
       duration: 7.9,
       credits: 0,
-      run_dir: 'evidence/green/run-20260821-104438-gate',
-      test_url: 'https://app.testmuai.com/runs/demo-gate-release',
+      run_dir: 'evidence/green/GREEN.ndjson',
+      test_url: '',
     }),
   },
   {
