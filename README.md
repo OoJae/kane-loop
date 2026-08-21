@@ -51,6 +51,21 @@ against the orchestrator in about a second, and Run goes live.
 no `localStorage`, no `sessionStorage`, no cookie. Open DevTools and search the bundle: there is no
 key in it to find. Reloading asks again, which is the trade for that.
 
+**Two things worth knowing before you press Run.**
+
+*It may take two attempts.* The hosted container has no first-party Anthropic key, so the agent
+runs on a third-party endpoint (see the honesty notes below). Kane catches the bug every time — that
+part is a real browser and it is deterministic — but the model on the other end is weaker at fixing
+it. Of four hosted runs while preparing this submission, two closed the loop and two went red and
+stayed red. If yours does not close, press **Run** again; the gate holding red is itself the
+feature working, not a failure. **The local loop uses first-party Claude and does not have this
+problem** — every committed recording in `evidence/` came from it.
+
+*Reset it and go again.* Whoever closes the loop leaves the bug fixed, so the next visitor would
+open an app that already works and proves nothing. The console has a **reset demo** control next to
+the key, which restores the seeded bug and clears the loop state. Use it before your run if the app
+pane looks suspiciously green.
+
 [The root URL](https://kane-loop-production.up.railway.app) is the project's landing page, and
 alongside it:
 
