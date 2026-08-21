@@ -14,12 +14,29 @@
 # of just bouncing off it.
 set -u
 
+# Maintainer escape hatch. Hooks inherit Claude Code's own environment, not the
+# environment of a Bash tool call, so an agent CANNOT set this for itself:
+# `KANE_HOOKS_OFF=1 rm tests/foo` inside a session never reaches this process.
+# It has to be exported before `claude` starts, which only a human can do.
+#
+# This exists because the guard once locked its own author out of the repo —
+# editing .claude/ was denied via both Bash and the Edit tool, and hook config is
+# cached at session start, so the only way out was restarting the session.
+if [ "${KANE_HOOKS_OFF:-}" = "1" ]; then exit 0; fi
+
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./kane-lib.sh
 . "$SELF_DIR/kane-lib.sh"
 
 KANE_PHASE="guard"
 INPUT="$(cat)"
+
+# Seal the oracle on the FIRST tool call of a session, not on the first verified
+# save. kane-verify.sh only fires after an edit to target-app/src, so anything
+# done to tests/ before that was previously folded into the baseline and then
+# certified as intact. This hook runs before any write, so it is the earliest
+# honest moment to take the fingerprint.
+[ -f "$ROOT/.kane-oracle.sha256" ] || oracle_seal
 
 TOOL="$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)"
 FILE="$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)"
@@ -81,7 +98,7 @@ if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
   esac
 
   case "$SAFE_CMD" in
-    *tests/*|*.claude/*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*)
+    *tests*|*.claude*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*|*.kane.lock*)
       # Default-deny, with an allowlist of read-only verbs.
       #
       # Enumerating the ways to write a file is whack-a-mole and it lost: the
@@ -100,33 +117,62 @@ if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
       READ_ONLY_VERBS="cat ls head tail grep egrep fgrep rg wc find file stat diff jq awk cut sort uniq echo printf cd pwd test true false less more od xxd basename dirname realpath readlink tree du shasum md5 md5sum sha256sum column nl comm join strings env export which type"
 
       verdict=allow
-      # A redirect into a protected path is a write no matter how safe the verb
-      # looks — `echo x > tests/foo` starts with `echo`.
-      case "$SAFE_CMD" in
-        *">"*) verdict=deny ;;
-      esac
+      # A redirect whose TARGET is protected is a write however safe the verb
+      # looks — `echo x > tests/foo` starts with `echo`. Match the target
+      # specifically: a blanket ">" test denied a literal "->" inside a curl
+      # format string, which is not a redirect at all.
+      if printf '%s\n' "$SAFE_CMD" | grep -Eq '>>?[[:space:]]*"?'"'"'?[^[:space:]]*(tests|\.claude|\.kane-|kane-loop\.config)'; then
+        verdict=deny
+      fi
 
       if [ "$verdict" = allow ]; then
         # Split on ; | & so `cd x && cat y` is judged per segment. The trailing
         # newline matters: `while read` drops a final unterminated line, which
         # silently made this whole branch a no-op the first time it was written.
+        # Once the shell has cd'd into protected territory, later segments no
+        # longer need to NAME it — `cd tests && rm -f darkmode_test.md` was
+        # allowed because the `rm` segment contains no path at all.
+        cwd_protected=0
         while IFS= read -r seg; do
           case "$seg" in
-            *tests/*|*.claude/*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*) ;;
-            *) continue ;;
+            *tests*|*.claude*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*|*.kane.lock*) ;;
+            *) [ "$cwd_protected" -eq 1 ] || continue ;;
           esac
+          # Strip leading whitespace, shell keywords (`do`/`then`/`else`/... were
+          # being read AS the verb), env assignments, and sudo.
           verb="$(printf '%s\n' "$seg" \
-            | sed -E 's/^[[:space:]]*//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*//; s/^sudo[[:space:]]+//' \
+            | sed -E 's/^[[:space:]]*//; s/^(do|then|else|elif|fi|done|:)[[:space:]]+//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*//; s/^sudo[[:space:]]+//' \
             | awk '{print $1}' | sed 's|.*/||')"
           [ -z "$verb" ] && continue
+          # A cd into protected territory arms every following segment.
+          if [ "$verb" = cd ]; then
+            case "$seg" in
+              *tests*|*.claude*) cwd_protected=1 ;;
+            esac
+            continue
+          fi
           # sed only mutates with -i.
           if [ "$verb" = sed ]; then
             case "$seg" in *"-i"*) verdict=deny; break ;; *) continue ;; esac
+          fi
+          # find only reads until it is told to act.
+          if [ "$verb" = find ]; then
+            case "$seg" in
+              *-delete*|*-exec*|*-execdir*|*-ok*) verdict=deny; break ;;
+              *) continue ;;
+            esac
           fi
           case " $READ_ONLY_VERBS " in
             *" $verb "*) continue ;;
             *) verdict=deny; break ;;
           esac
+        # KNOWN FALSE POSITIVE, accepted deliberately: a "|" inside quotes is a
+        # separator here too, so `jq 'select(.a)|.b' .kane-events.ndjson` splits
+        # into a fragment whose first word is `.b'` and gets denied. The obvious
+        # fix — blanking quoted spans before splitting — is worse: it would also
+        # blank the path in `rm -f "tests/darkmode_test.md"`, turning a read
+        # inconvenience into a write bypass. A denied read costs a retry; a
+        # missed write costs the whole guarantee.
         done <<EOF
 $(printf '%s\n' "$SAFE_CMD" | tr ';|&' '\n')
 EOF

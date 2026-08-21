@@ -72,7 +72,13 @@ acquire_lock() {
   # Stale lock recovery: a killed hook can leave the directory behind.
   if [ -d "$LOCK" ]; then
     local age
-    age="$(( $(date +%s) - $(stat -f %m "$LOCK" 2>/dev/null || echo 0) ))"
+    # BSD `stat -f %m` vs GNU `stat -c %Y`. GNU prints "?" and exits 0 for the
+    # BSD form, so `|| echo 0` never fired and the arithmetic below aborted the
+    # whole function — leaving the hook running with no lock and no EXIT trap.
+    local mtime
+    mtime="$(stat -f %m "$LOCK" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || echo 0)"
+    case "$mtime" in ''|*[!0-9]*) mtime=0 ;; esac
+    age="$(( $(date +%s) - mtime ))"
     if [ "$age" -gt 600 ]; then
       rmdir "$LOCK" 2>/dev/null
       if mkdir "$LOCK" 2>/dev/null; then
@@ -88,7 +94,17 @@ acquire_lock() {
 # A dev server that is down produces "connection refused" failures that would
 # send the agent debugging entirely the wrong thing. Better to skip the run.
 dev_server_up() {
-  curl -sf -o /dev/null --max-time 5 "$TARGET_URL"
+  if command -v curl >/dev/null 2>&1; then
+    curl -sf -o /dev/null --max-time 5 "$TARGET_URL"
+    return
+  fi
+  if command -v wget >/dev/null 2>&1; then
+    wget -q -T 5 -O /dev/null "$TARGET_URL"
+    return
+  fi
+  # Last resort so a missing curl does not silently fail the gate open.
+  local hostport="${TARGET_URL#*://}"; hostport="${hostport%%/*}"
+  (exec 3<>"/dev/tcp/${hostport%%:*}/${hostport##*:}") 2>/dev/null
 }
 
 kane_available() {
@@ -125,7 +141,16 @@ run_kane_suite() {
     # readable. The exit code is the authoritative verdict:
     #   0 passed · 1 failed · 2 error · 3 timeout
     local raw rc credits
-    raw="$(mktemp -t kaneloop)"
+    # GNU mktemp requires >=3 trailing X's and exits 1 without them; BSD does
+    # not. With `-t kaneloop` this returned "" on Linux, the redirect below
+    # failed, no run_end was produced, and the hook reported a fabricated app
+    # failure. Explicit template works identically on both.
+    raw="$(mktemp "${TMPDIR:-/tmp}/kaneloop.XXXXXX")" || raw=""
+    if [ -z "$raw" ]; then
+      emit_event flow_error flow "$name" reason "could not create a temp file"
+      KANE_FAILS="${KANE_FAILS}[$name] could not create a temp file — nothing was verified. "
+      continue
+    fi
     kane-cli testmd run "$t" --agent --headless --timeout "$KANE_RUN_TIMEOUT" \
       >"$raw" 2>>"$STDERR_LOG"
     rc=$?
@@ -146,8 +171,22 @@ run_kane_suite() {
       # No verdict at all: Kane errored (auth, infra, crash) before reporting.
       # Surface it honestly instead of letting it read as a pass.
       rm -f "$raw"
-      emit_event flow_error flow "$name" reason "no run_end event (exit $rc); see .kane-stderr.log"
-      KANE_FAILS="${KANE_FAILS}[$name] Kane produced no verdict (exit $rc — see .kane-stderr.log). "
+      # Distinguish "your app is broken" from "the verifier is broken". Without
+      # this, an expired Kane token produced a failure whose injected message
+      # told the agent to fix application code that was working perfectly —
+      # the single most expensive way for this loop to be wrong.
+      local tail_err
+      tail_err="$(tail -c 2000 "$STDERR_LOG" 2>/dev/null)"
+      case "$tail_err" in
+        *"not logged in"*|*"Not logged in"*|*[Uu]nauthorized*|*401*|*403*|*expired*|*[Ll]ogin*|*authenticat*)
+          emit_event flow_error flow "$name" reason "Kane could not authenticate (exit $rc) — not an app bug"
+          KANE_FAILS="${KANE_FAILS}[$name] Kane could not AUTHENTICATE (exit $rc). This is NOT an application bug — do not change the app. Run \`kane-cli login --oauth\`. Nothing was verified. "
+          ;;
+        *)
+          emit_event flow_error flow "$name" reason "no run_end event (exit $rc); see .kane-stderr.log"
+          KANE_FAILS="${KANE_FAILS}[$name] Kane produced no verdict (exit $rc — see .kane-stderr.log). This may be an infrastructure problem rather than an app bug. "
+          ;;
+      esac
       continue
     fi
 
@@ -228,7 +267,21 @@ run_kane_suite() {
 #
 # Deliberately covers output-<stem>/ as well as the .md — the cached recording
 # is what Kane replays, so it is the more valuable thing to tamper with.
+# shasum is not universal (it is Perl-based; many minimal Linux images ship only
+# sha256sum). Without a hash tool the manifest returned "" and oracle_verify
+# reported success — the integrity check silently became a no-op.
+# Resolved once as a COMMAND, not a function: the hashing runs inside `xargs`,
+# which spawns a fresh shell that would not inherit a function definition.
+if command -v shasum >/dev/null 2>&1; then
+  KANE_HASH_CMD="shasum -a 256"
+elif command -v sha256sum >/dev/null 2>&1; then
+  KANE_HASH_CMD="sha256sum"
+else
+  KANE_HASH_CMD=""
+fi
+
 oracle_manifest() {
+  [ -z "$KANE_HASH_CMD" ] && return 1
   # -print0/-0: this repo's path contains a space, and plain xargs splits on it
   # (which silently hashed nothing at all the first time round).
   # Sorting the shasum output rather than the filenames keeps it deterministic
@@ -239,9 +292,9 @@ oracle_manifest() {
   # operation as tampering.
   find "$ROOT/tests" -type f \( -name '*_test.md' -o -name 'actions.ndjson' \) \
     -not -path '*/pending/*' -print0 2>/dev/null \
-    | xargs -0 shasum -a 256 2>/dev/null \
+    | xargs -0 $KANE_HASH_CMD 2>/dev/null \
     | LC_ALL=C sort \
-    | shasum -a 256 2>/dev/null | awk '{print $1}'
+    | $KANE_HASH_CMD 2>/dev/null | awk '{print $1}'
 }
 
 oracle_seal() {
@@ -255,7 +308,10 @@ oracle_verify() {
   [ -f "$ROOT/.kane-oracle.sha256" ] || { oracle_seal; return 0; }
   expected="$(cat "$ROOT/.kane-oracle.sha256" 2>/dev/null)"
   actual="$(oracle_manifest)"
-  [ -z "$actual" ] && return 0
+  if [ -z "$actual" ]; then
+    echo "no sha256 tool on PATH, so the oracle could not be re-checked — this green is not evidence"
+    return 1
+  fi
   if [ "$expected" != "$actual" ]; then
     echo "the Kane flows or their cached recordings changed during this session (oracle checksum ${expected:0:12}… → ${actual:0:12}…), so any pass since then is not evidence"
     return 1

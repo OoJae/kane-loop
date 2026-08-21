@@ -45,7 +45,33 @@ if [ "$BLOCKS" -ge "$MAX_BLOCKS" ]; then
   exit 0
 fi
 
-# 3) Preconditions — never block on infrastructure we can't verify through.
+# 3) Integrity FIRST — before the infrastructure preconditions below.
+#
+# This is a pure filesystem checksum: it needs no kane-cli, no dev server and no
+# lock. Running it after those checks meant any of their release paths could
+# skip it entirely — stop the dev server, delete the flows, and the gate waved
+# the agent through.
+#
+# This check used to sit below the empty-suite branch, which made the whole gate
+# defeatable with one command: `rm -rf tests` emptied the suite, the branch below
+# released, and the oracle was never consulted. Deleting the flows now moves the
+# manifest, so it lands here and blocks.
+if ! drift="$(oracle_verify)"; then
+  # Count this block like any other. Exiting 2 without incrementing made the
+  # escape hatch unreachable on this path — an unbounded block loop, which is
+  # the one thing the counter exists to prevent.
+  BLOCKS=$((BLOCKS + 1))
+  printf '%s' "$BLOCKS" >"$FAILCOUNT" 2>/dev/null || true
+  emit_event gate_result status "tampered" detail "$drift" blocks "$BLOCKS"
+  REASON="You are not done: ${drift}. Restore the flows and their cached recordings to their original state, then fix the application code in target-app/src so Kane passes against the untouched suite."
+  jq -nc --arg r "$REASON" \
+    '{decision:"block",reason:$r,
+      hookSpecificOutput:{hookEventName:"Stop",permissionDecision:"deny",permissionDecisionReason:$r}}'
+  printf '%s\n' "$REASON" >&2
+  exit 2
+fi
+
+# 4) Preconditions — never block on infrastructure we can't verify through.
 if ! kane_available; then
   emit_event gate_release reason "kane-cli not on PATH"
   exit 0
@@ -63,35 +89,21 @@ emit_event gate_start
 run_kane_suite
 
 # An empty suite is not a pass. Release (there is nothing to block on) but never
-# claim verification that did not happen.
+# claim verification that did not happen. Reaching here means the oracle is
+# intact, so an empty tests/ is how the repo actually is, not something the
+# agent did this session.
 if [ "$KANE_FLOW_COUNT" -eq 0 ]; then
   emit_event gate_release status "unverified" reason "no *_test.md flows found in tests/ — nothing was verified"
   exit 0
 fi
 
 if [ -z "$KANE_FAILS" ]; then
-  # A green is only evidence if the oracle that produced it is the one we
-  # started with. Denial stops the obvious edit routes; this catches the rest.
-  if ! drift="$(oracle_verify)"; then
-    # Count this block like any other. Exiting 2 without incrementing made the
-    # escape hatch unreachable on this path — an unbounded block loop, which is
-    # the one thing the counter exists to prevent.
-    BLOCKS=$((BLOCKS + 1))
-    printf '%s' "$BLOCKS" >"$FAILCOUNT" 2>/dev/null || true
-    emit_event gate_result status "tampered" detail "$drift" blocks "$BLOCKS"
-    REASON="You are not done: ${drift}. Restore the flows and their cached recordings to their original state, then fix the application code in target-app/src so Kane passes against the untouched suite."
-    jq -nc --arg r "$REASON" \
-      '{decision:"block",reason:$r,
-        hookSpecificOutput:{hookEventName:"Stop",permissionDecision:"deny",permissionDecisionReason:$r}}'
-    printf '%s\n' "$REASON" >&2
-    exit 2
-  fi
   emit_event gate_result status "green" detail "gate released — every flow passes, oracle intact"
   rm -f "$FAILCOUNT"
   exit 0
 fi
 
-# 4) Red: block the stop and tell the agent exactly why.
+# 5) Red: block the stop and tell the agent exactly why.
 BLOCKS=$((BLOCKS + 1))
 printf '%s' "$BLOCKS" >"$FAILCOUNT"
 emit_event gate_result status "red" detail "$KANE_FAILS" blocks "$BLOCKS"
