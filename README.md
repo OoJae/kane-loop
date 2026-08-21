@@ -35,7 +35,18 @@ Kane isn't tacked on at the end. **The closed loop is the product.**
 
 ---
 
-## Quickstart
+## Try it without installing anything
+
+**[Watch the loop close ↗](https://kane-loop-production.up.railway.app/?replay=live-loop)** — a real
+recorded session replayed from [its own committed log](evidence/ui/live-loop.events.ndjson), line by
+line. ~40 seconds, no setup. The banner says RECORDED, because it is.
+
+The same host runs the loop **live** at
+[kane-loop-production.up.railway.app](https://kane-loop-production.up.railway.app) — the app pane is
+real and interactive. Starting a run needs a key (it spends real Kane credits and executes code in
+the container), so the Run button is inert without one; the key ships with the submission.
+
+## Quickstart — the real thing, locally
 
 ```bash
 git clone <this-repo> && cd kane-loop
@@ -53,12 +64,14 @@ and watch the loop close: **RED → failure injected → agent self-corrects →
 
 ![The loop closing live](evidence/ui/live-loop-hero.png)
 
-*One frame, one real run. The agent edits `App.tsx` → Kane fails in a real browser → the failure is
-injected into the agent's context (the red card) → the agent reads it and answers "Reading was only
-half of it — nothing writes the value yet" → GREEN, and the Stop gate releases. The raw event log
-for this exact run is committed at
-[`evidence/ui/live-loop.events.ndjson`](evidence/ui/live-loop.events.ndjson) — every number on
-screen is in it.*
+*One real run, played back from its own committed log. The agent edits `App.tsx` → Kane fails in a
+real browser → the failure **and Kane's screenshot of the failing page** are injected into the
+agent's context (the red card) → the agent answers "I added the read side but not the write.
+Adding persistence now" → GREEN, and the Stop gate releases.*
+
+*This frame is [`?replay=live-loop`](https://kane-loop-production.up.railway.app/?replay=live-loop)
+rendering [`evidence/ui/live-loop.events.ndjson`](evidence/ui/live-loop.events.ndjson) line by line,
+so every number on screen — including the 2.08 credits — is in that file. Check it.*
 
 **Verified on a clean clone.** `git clone` → `./scripts/dev.sh` → all three services come up, then
 one prompt reproduces the whole loop end to end: RED, a self-correction, GREEN, and the Stop gate
@@ -146,8 +159,16 @@ evidence."*
 rather than implied. The agent is allowed `Bash(npm:*)` and can write `target-app/package.json`, so
 a lifecycle script is an unguarded path to the filesystem. The manifest still catches the *result*
 (the checksum moves, and the gate blocks), but the guard does not prevent the attempt. Narrowing
-the tool grant is the real fix. The honest claim is: **the obvious routes are denied, and anything
-that gets through is detected at the gate** — not that tampering is impossible.
+the tool grant is the real fix.
+
+And the detector has a boundary of its own, found by a second audit: the SHA-256 manifest covers the
+flows and their cached recordings, **not the hook scripts and not the gate's own state files**. A
+shell that reaches those can switch the detector off rather than trip it. So the honest claim is
+narrower than "anything that gets through is detected": **oracle *content* tampering moves the
+checksum and the gate blocks; a shell with filesystem access can disable the checker instead.**
+What none of these can do is manufacture a green — every fail-open path emits a `gate_release` with
+a stated reason, and the UI refuses to paint a reasonless release green while the last verdict was
+red. The agent can escape the gate; it cannot forge a pass.
 
 The guard is deliberately blunt, and it will occasionally deny a *read* — it judges the command
 string, so `jq 'a|b' file` or a `git` command whose message merely mentions the flow directory gets
@@ -213,6 +234,16 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
   unmissable "DEMO DATA — NOT A REAL RUN" banner and can never be mistaken for a verdict.
 - **An empty test suite reports `unverified`, never green.** We found that fail-open bug in our
   own gate during harness testing and fixed it.
+- **The hosted instance does not use a first-party Anthropic key.** There isn't one, so the
+  deployed container routes Claude Code through an Anthropic-compatible third-party endpoint
+  (MiMo, `token-plan-sgp.xiaomimimo.com`) via a small shim, [`scripts/model-proxy.mjs`](scripts/model-proxy.mjs),
+  that rewrites the model name in flight. Prompts and `target-app` source therefore reach that
+  provider. **Every piece of committed evidence in this repo, and the local loop, is first-party
+  Claude** — all ten `.stream.json` files record `claude-opus-5`, and none came from the shim.
+  The UI still labels turns "Claude" because it renders Claude Code's own stream verbatim.
+- **A key-holder on the hosted instance can run code in the container.** The agent is granted
+  `Bash(npm:*)` by design, so the run key is effectively an execution key — which is why it is
+  gated and handed out deliberately rather than published. The local loop is unaffected.
 
 ## Pinned versions
 
@@ -223,7 +254,7 @@ Ports: 5173 target app · 4000 orchestrator · 4321 UI.
 
 | Path | What |
 |---|---|
-| [`.claude/hooks/`](.claude/hooks/) | the loop: `kane-verify.sh`, `kane-gate.sh`, shared `kane-lib.sh` |
+| [`.claude/hooks/`](.claude/hooks/) | the loop: `kane-guard.sh` (PreToolUse), `kane-verify.sh` (PostToolUse), `kane-gate.sh` (Stop), shared `kane-lib.sh` |
 | [`target-app/`](target-app/) | Kane Notes — the app the agent edits (seeded bug lives here) |
 | [`tests/`](tests/) | frozen Kane flows — immutable ground truth |
 | [`server/`](server/) | orchestrator: spawns the agent, tails the event log, serves evidence |
@@ -231,6 +262,8 @@ Ports: 5173 target app · 4000 orchestrator · 4321 UI.
 | [`evidence/`](evidence/) | real red + green run artifacts |
 | [`docs/tool-surface.md`](docs/tool-surface.md) | everything we verified about Kane + Claude Code |
 | [`docs/event-protocol.md`](docs/event-protocol.md) | the hooks → server → UI contract |
+| [`scripts/`](scripts/) | `dev.sh` (local), `demo-reset.sh` (re-seed the bug), `capture-run.sh`, `serve.sh` (container) |
+| [`Dockerfile`](Dockerfile) · [`railway.json`](railway.json) | the hosted deployment — Chrome, both CLIs, one port |
 
 ---
 

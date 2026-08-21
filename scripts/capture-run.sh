@@ -34,6 +34,16 @@ fi
 mkdir -p "$DEST_DIR"
 cp "$SRC" "$DEST"
 
+# The hero image and the log it claims to depict drifted apart once already: the
+# screenshot was frozen while this script silently overwrote live-loop.events.ndjson
+# from a later run, so the README's "every number on screen is in it" became false.
+# Warn when a capture lands next to an older image of the same name.
+HERO="$DEST_DIR/${NAME}-hero.png"
+if [ -f "$HERO" ] && [ "$HERO" -ot "$DEST" ]; then
+  printf '\033[1;33m!\033[0m %s\n' "evidence/ui/${NAME}-hero.png is now OLDER than the log it depicts."
+  printf '  Re-shoot it from ?replay=%s so every number on screen is in this file.\n' "$NAME"
+fi
+
 lines="$(wc -l <"$DEST" | tr -d ' ')"
 verdicts="$(grep -c '"type":"flow_end"' "$DEST" || true)"
 echo "✓ captured $lines lines ($verdicts verdicts) → evidence/ui/${NAME}.events.ndjson"
