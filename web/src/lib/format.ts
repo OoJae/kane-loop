@@ -157,3 +157,12 @@ export function toBool(value: unknown, fallback: boolean): boolean {
   }
   return fallback
 }
+
+/**
+ * Kane reports credits as a float with full binary noise — a real session total came
+ * back as `9.203999999999999`, which is what the UI printed. Whole numbers stay
+ * whole; anything else gets two decimals.
+ */
+export function formatCredits(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}

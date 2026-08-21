@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { isHttpUrl, shortenPath } from '../lib/format'
+import { formatCredits, isHttpUrl, shortenPath } from '../lib/format'
 import { EVIDENCE_BASE } from '../lib/config'
 import type { Evidence } from '../lib/store'
 
@@ -53,7 +53,7 @@ export function EvidenceStrip({
         </h3>
         <span className="h-px flex-1 bg-line-soft" />
         <span className="font-mono text-[10.5px] text-dim tabular-nums">
-          {creditsTotal} credits this session
+          {formatCredits(creditsTotal)} credits this session
         </span>
       </div>
 

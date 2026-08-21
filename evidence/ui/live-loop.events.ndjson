@@ -1,0 +1,243 @@
+{"source":"kane-loop","type":"verify_start","phase":"verify","ts":"2026-08-21T07:36:46Z","file":"/Users/oluwademilade/Desktop/Kane Loop/target-app/src/App.tsx"}
+{"source":"kane-loop","type":"flow_start","phase":"verify","ts":"2026-08-21T07:36:46Z","flow":"darkmode_test.md"}
+{"type":"test_md_step_start","step_index":1,"heading":"Open the notes app","ref":null}
+{"type":"run_start","objective":"Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297814,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"https://kaneai-playground.lambdatest.io/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.3,"summary":"navigate: Navigate to http://localhost:5173","ordinal":1,"id":"0-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"52390dba-d17e-4ede-a6cd-254b2eba637a"}
+{"type":"run_end","run_id":"run-0","status":"passed","summary":"","reason":"replay completed","duration":0.31,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/0/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/0/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":1,"status":"passed","duration_s":0.31,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":2,"heading":"Turn on dark mode","ref":null}
+{"type":"run_start","objective":"Click the dark mode toggle in the header. Assert the page background is now a dark colour.","timestamp":1787297815,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 3 actions","recording_length":3}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Clicking the dark mode toggle button","action_type":"click","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Clicking the dark mode toggle button","action_type":"click"}
+{"type":"step_end","index":1,"status":"passed","duration":0.7,"summary":"click: Clicking the dark mode toggle button","ordinal":2,"id":"1-1","kind":"click","screenshot":"screenshot.jpg","action_id":"b2249211-cca7-4bbc-86df-04077032b853"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"action","detail":"Checking whether the page background is a dark colour","action_type":"analyze","success":true}
+{"type":"step_event","index":2,"event":"reasoning","detail":"Checking whether the page background is a dark colour","action_type":"analyze"}
+{"type":"step_end","index":2,"status":"passed","duration":6.6,"summary":"analyze: Checking whether the page background is a dark colour","ordinal":3,"id":"1-2","kind":"analyze","screenshot":"screenshot.jpg","action_id":"79481cb1-52af-4648-8532-50dcf679b606"}
+{"type":"step_start","index":3,"objective":"Step 3"}
+{"type":"step_event","index":3,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":3,"event":"assertion","detail":"the page background is now a dark colour","passed":true}
+{"type":"step_end","index":3,"status":"passed","duration":0.1,"summary":"assert: the page background is now a dark colour","ordinal":4,"id":"1-3","kind":"assert","screenshot":"screenshot.jpg","action_id":"915568a7-3bdb-4276-b6ec-de0655b2cc21"}
+{"type":"run_end","run_id":"run-1","status":"passed","summary":"","reason":"replay completed","duration":7.33,"final_url":"http://localhost:5173/","actions_executed":3,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/1/replay-test/screenshots/step_003.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/1/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":2,"status":"passed","duration_s":7.33,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":3,"heading":"Load the page again from scratch","ref":null}
+{"type":"run_start","objective":"Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297822,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"navigate: Navigate to http://localhost:5173","ordinal":5,"id":"2-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"9f0c48c0-850e-4eb1-af3d-84d854139721"}
+{"type":"run_end","run_id":"run-2","status":"passed","summary":"","reason":"replay completed","duration":0.12,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/2/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/2/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":3,"status":"passed","duration_s":0.12,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":4,"heading":"Verify dark mode survived","ref":null}
+{"type":"run_start","objective":"Assert that the page background is still dark.","timestamp":1787297822,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 2 actions","recording_length":2}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Checking whether the page background is dark","action_type":"analyze","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Checking whether the page background is dark","action_type":"analyze"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"analyze: Checking whether the page background is dark","ordinal":6,"id":"3-1","kind":"analyze","screenshot":"screenshot.jpg","action_id":"7c5c6193-b553-47f6-b364-389ceeb70ff2"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"assertion","detail":"the page background is still dark","passed":false}
+{"type":"step_end","index":2,"status":"failed","duration":0,"summary":"assert: the page background is still dark","ordinal":7,"id":"3-2","kind":"assert","screenshot":"screenshot.jpg","action_id":"5e1b9e23-699d-4932-b9aa-2a6d845eacd2"}
+{"type":"run_end","run_id":"run-3","status":"failed","summary":"","reason":"assertion_failed: @ step 2","duration":40.07,"final_url":"http://localhost:5173/","actions_executed":2,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/3/replay-test/screenshots/step_002.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/3/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"false","secret":false}},"pointer":""},"variables_out":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"false","secret":false}},"store_out":{},"verdict":{"confirmed":false,"status":"failed","family":"application_issue","category":"ui_state_mismatch","category_proposal":"","severity":"minor","root_cause":"The app is showing a different theme than the recorded behavior, so the page is no longer in the expected dark state when this check runs.","agent_fault_assessment":"The agent did not change the page state; it only inspected the loaded page and ran the visual assertion. There was no click or input that could have caused the light background, so the failure was not created by the agent's actions.","bug_title":"Default page theme loads light instead of dark","signals":[],"confidence":0.67,"suggestion":"Check whether the default theme or saved theme behavior changed. If the page is still supposed to open dark, restore that behavior; otherwise update the test to set the theme explicitly before asserting it.","one_liner":"The replay reached the page successfully, but the background shown on load is light rather than the dark background the recording expected.","relevant_steps":[2],"culprit_step":"3-2","credits_consumed":5.497999999999999}}
+{"type":"test_md_bug_verdict","step_index":4,"confirmed":false,"bug_title":"Default page theme loads light instead of dark","family":"application_issue","category":"ui_state_mismatch","category_proposal":null,"severity":"minor","confidence":0.67,"one_liner":"The replay reached the page successfully, but the background shown on load is light rather than the dark background the recording expected."}
+{"type":"test_md_step_end","step_index":4,"status":"failed","duration_s":40.07,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_evidence_ingest","status":"ok","evidence_id":"cdeda1fa-942a-47f7-8be4-62f288b27e35"}
+{"type":"test_md_summary","overall_status":"failed","duration_s":52,"steps":{"total":4,"passed":3,"failed":1,"skipped":0,"replay_decisions":4,"author_decisions":0},"retries":{"triggered":false},"commit":{"committed":false,"reason":"run_failed"},"artifacts":{"replaced":false},"upload":{"performed":true,"succeeded":true},"cancelled":false}
+{"type":"test_md_done","overall_status":"failed","duration_s":52,"session_id":"95ae57cd-2d29-4199-ae64-7d3aab5fa644"}
+{"source":"kane-loop","type":"flow_end","phase":"verify","flow":"darkmode_test.md","ts":"2026-08-21T07:37:48Z","status":"failed","summary":"","one_liner":"failed assertion: the page background is still dark","reason":"assertion_failed: @ step 2","duration":52,"credits":5.497999999999999,"reason_code":"","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/95ae57cd-2d29-4199-ae64-7d3aab5fa644/scratch/3/replay-test","session_dir":"","test_url":"http://localhost:5173/"}
+{"source":"kane-loop","type":"verify_result","phase":"verify","ts":"2026-08-21T07:37:48Z","status":"red","detail":"[darkmode_test.md] step \"Verify dark mode survived\" failed — failed assertion: \"the page background is still dark\" (assertion_failed: @ step 2) "}
+{"source":"kane-loop","type":"verify_start","phase":"verify","ts":"2026-08-21T07:37:52Z","file":"/Users/oluwademilade/Desktop/Kane Loop/target-app/src/App.tsx"}
+{"source":"kane-loop","type":"flow_start","phase":"verify","ts":"2026-08-21T07:37:52Z","flow":"darkmode_test.md"}
+{"type":"test_md_step_start","step_index":1,"heading":"Open the notes app","ref":null}
+{"type":"run_start","objective":"Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297878,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"https://kaneai-playground.lambdatest.io/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.3,"summary":"navigate: Navigate to http://localhost:5173","ordinal":1,"id":"0-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"52390dba-d17e-4ede-a6cd-254b2eba637a"}
+{"type":"run_end","run_id":"run-0","status":"passed","summary":"","reason":"replay completed","duration":0.3,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/0/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/0/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":1,"status":"passed","duration_s":0.3,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":2,"heading":"Turn on dark mode","ref":null}
+{"type":"run_start","objective":"Click the dark mode toggle in the header. Assert the page background is now a dark colour.","timestamp":1787297878,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 3 actions","recording_length":3}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Clicking the dark mode toggle button","action_type":"click","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Clicking the dark mode toggle button","action_type":"click"}
+{"type":"step_end","index":1,"status":"passed","duration":0.7,"summary":"click: Clicking the dark mode toggle button","ordinal":2,"id":"1-1","kind":"click","screenshot":"screenshot.jpg","action_id":"b2249211-cca7-4bbc-86df-04077032b853"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"action","detail":"Checking whether the page background is a dark colour","action_type":"analyze","success":true}
+{"type":"step_event","index":2,"event":"reasoning","detail":"Checking whether the page background is a dark colour","action_type":"analyze"}
+{"type":"step_end","index":2,"status":"passed","duration":6.2,"summary":"analyze: Checking whether the page background is a dark colour","ordinal":3,"id":"1-2","kind":"analyze","screenshot":"screenshot.jpg","action_id":"79481cb1-52af-4648-8532-50dcf679b606"}
+{"type":"step_start","index":3,"objective":"Step 3"}
+{"type":"step_event","index":3,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":3,"event":"assertion","detail":"the page background is now a dark colour","passed":true}
+{"type":"step_end","index":3,"status":"passed","duration":0,"summary":"assert: the page background is now a dark colour","ordinal":4,"id":"1-3","kind":"assert","screenshot":"screenshot.jpg","action_id":"915568a7-3bdb-4276-b6ec-de0655b2cc21"}
+{"type":"run_end","run_id":"run-1","status":"passed","summary":"","reason":"replay completed","duration":6.93,"final_url":"http://localhost:5173/","actions_executed":3,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/1/replay-test/screenshots/step_003.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/1/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":2,"status":"passed","duration_s":6.93,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":3,"heading":"Load the page again from scratch","ref":null}
+{"type":"run_start","objective":"Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297885,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"navigate: Navigate to http://localhost:5173","ordinal":5,"id":"2-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"9f0c48c0-850e-4eb1-af3d-84d854139721"}
+{"type":"run_end","run_id":"run-2","status":"passed","summary":"","reason":"replay completed","duration":0.12,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/2/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/2/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":3,"status":"passed","duration_s":0.12,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":4,"heading":"Verify dark mode survived","ref":null}
+{"type":"run_start","objective":"Assert that the page background is still dark.","timestamp":1787297885,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 2 actions","recording_length":2}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Checking whether the page background is dark","action_type":"analyze","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Checking whether the page background is dark","action_type":"analyze"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"analyze: Checking whether the page background is dark","ordinal":6,"id":"3-1","kind":"analyze","screenshot":"screenshot.jpg","action_id":"7c5c6193-b553-47f6-b364-389ceeb70ff2"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"assertion","detail":"the page background is still dark","passed":false}
+{"type":"step_end","index":2,"status":"failed","duration":0,"summary":"assert: the page background is still dark","ordinal":7,"id":"3-2","kind":"assert","screenshot":"screenshot.jpg","action_id":"5e1b9e23-699d-4932-b9aa-2a6d845eacd2"}
+{"type":"run_end","run_id":"run-3","status":"failed","summary":"","reason":"assertion_failed: @ step 2","duration":24.02,"final_url":"http://localhost:5173/","actions_executed":2,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/3/replay-test/screenshots/step_002.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/3/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"false","secret":false}},"pointer":""},"variables_out":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"false","secret":false}},"store_out":{},"verdict":{"confirmed":false,"status":"broken","family":"automation_bug","category":"state_transition_bug","category_proposal":"","severity":"minor","root_cause":"The test expected the page to already be dark without first turning on dark mode or restoring that saved preference.","agent_fault_assessment":"The agent did not cause the page to become light. It only inspected the page and ran the saved assertion. The outcome points to the recording assuming the app would already be in dark mode, but no replayed step in the evidence established that state first.","bug_title":"Dark background assertion relies on missing theme setup","signals":[],"confidence":0.89,"suggestion":"Update the recording to explicitly enable dark mode, or seed the saved theme state before asserting the background color.","one_liner":"The replay checked for a dark page, but the app opened in light mode, so this looks like a stale state assumption in the test rather than a product regression.","relevant_steps":[2],"culprit_step":"step 3-2","credits_consumed":3.706}}
+{"type":"test_md_bug_verdict","step_index":4,"confirmed":false,"bug_title":"Dark background assertion relies on missing theme setup","family":"automation_bug","category":"state_transition_bug","category_proposal":null,"severity":"minor","confidence":0.89,"one_liner":"The replay checked for a dark page, but the app opened in light mode, so this looks like a stale state assumption in the test rather than a product regression."}
+{"type":"test_md_step_end","step_index":4,"status":"failed","duration_s":24.02,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_evidence_ingest","status":"ok","evidence_id":"f96ea642-fd6f-4c95-8de5-f52feffbcd74"}
+{"type":"test_md_summary","overall_status":"failed","duration_s":35,"steps":{"total":4,"passed":3,"failed":1,"skipped":0,"replay_decisions":4,"author_decisions":0},"retries":{"triggered":false},"commit":{"committed":false,"reason":"run_failed"},"artifacts":{"replaced":false},"upload":{"performed":true,"succeeded":true},"cancelled":false}
+{"type":"test_md_done","overall_status":"failed","duration_s":35,"session_id":"5f5f77cd-6f86-43d6-a780-1513eff1e54a"}
+{"source":"kane-loop","type":"flow_end","phase":"verify","flow":"darkmode_test.md","ts":"2026-08-21T07:38:34Z","status":"failed","summary":"","one_liner":"failed assertion: the page background is still dark","reason":"assertion_failed: @ step 2","duration":35,"credits":3.706,"reason_code":"","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/5f5f77cd-6f86-43d6-a780-1513eff1e54a/scratch/3/replay-test","session_dir":"","test_url":"http://localhost:5173/"}
+{"source":"kane-loop","type":"verify_result","phase":"verify","ts":"2026-08-21T07:38:34Z","status":"red","detail":"[darkmode_test.md] step \"Verify dark mode survived\" failed — failed assertion: \"the page background is still dark\" (assertion_failed: @ step 2) "}
+{"source":"kane-loop","type":"verify_start","phase":"verify","ts":"2026-08-21T07:38:38Z","file":"/Users/oluwademilade/Desktop/Kane Loop/target-app/src/App.tsx"}
+{"source":"kane-loop","type":"flow_start","phase":"verify","ts":"2026-08-21T07:38:38Z","flow":"darkmode_test.md"}
+{"type":"test_md_step_start","step_index":1,"heading":"Open the notes app","ref":null}
+{"type":"run_start","objective":"Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297924,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"https://kaneai-playground.lambdatest.io/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.3,"summary":"navigate: Navigate to http://localhost:5173","ordinal":1,"id":"0-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"52390dba-d17e-4ede-a6cd-254b2eba637a"}
+{"type":"run_end","run_id":"run-0","status":"passed","summary":"","reason":"replay completed","duration":0.29,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/0/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/0/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":1,"status":"passed","duration_s":0.29,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":2,"heading":"Turn on dark mode","ref":null}
+{"type":"run_start","objective":"Click the dark mode toggle in the header. Assert the page background is now a dark colour.","timestamp":1787297924,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 3 actions","recording_length":3}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Clicking the dark mode toggle button","action_type":"click","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Clicking the dark mode toggle button","action_type":"click"}
+{"type":"step_end","index":1,"status":"passed","duration":0.7,"summary":"click: Clicking the dark mode toggle button","ordinal":2,"id":"1-1","kind":"click","screenshot":"screenshot.jpg","action_id":"b2249211-cca7-4bbc-86df-04077032b853"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"action","detail":"Checking whether the page background is a dark colour","action_type":"analyze","success":true}
+{"type":"step_event","index":2,"event":"reasoning","detail":"Checking whether the page background is a dark colour","action_type":"analyze"}
+{"type":"step_end","index":2,"status":"passed","duration":6.8,"summary":"analyze: Checking whether the page background is a dark colour","ordinal":3,"id":"1-2","kind":"analyze","screenshot":"screenshot.jpg","action_id":"79481cb1-52af-4648-8532-50dcf679b606"}
+{"type":"step_start","index":3,"objective":"Step 3"}
+{"type":"step_event","index":3,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":3,"event":"assertion","detail":"the page background is now a dark colour","passed":true}
+{"type":"step_end","index":3,"status":"passed","duration":0,"summary":"assert: the page background is now a dark colour","ordinal":4,"id":"1-3","kind":"assert","screenshot":"screenshot.jpg","action_id":"915568a7-3bdb-4276-b6ec-de0655b2cc21"}
+{"type":"run_end","run_id":"run-1","status":"passed","summary":"","reason":"replay completed","duration":7.5,"final_url":"http://localhost:5173/","actions_executed":3,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/1/replay-test/screenshots/step_003.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/1/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":2,"status":"passed","duration_s":7.5,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":3,"heading":"Load the page again from scratch","ref":null}
+{"type":"run_start","objective":"Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297931,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"navigate: Navigate to http://localhost:5173","ordinal":5,"id":"2-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"9f0c48c0-850e-4eb1-af3d-84d854139721"}
+{"type":"run_end","run_id":"run-2","status":"passed","summary":"","reason":"replay completed","duration":0.11,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/2/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/2/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":3,"status":"passed","duration_s":0.11,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":4,"heading":"Verify dark mode survived","ref":null}
+{"type":"run_start","objective":"Assert that the page background is still dark.","timestamp":1787297932,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 2 actions","recording_length":2}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Checking whether the page background is dark","action_type":"analyze","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Checking whether the page background is dark","action_type":"analyze"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"analyze: Checking whether the page background is dark","ordinal":6,"id":"3-1","kind":"analyze","screenshot":"screenshot.jpg","action_id":"7c5c6193-b553-47f6-b364-389ceeb70ff2"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"assertion","detail":"the page background is still dark","passed":true}
+{"type":"step_end","index":2,"status":"passed","duration":0,"summary":"assert: the page background is still dark","ordinal":7,"id":"3-2","kind":"assert","screenshot":"screenshot.jpg","action_id":"5e1b9e23-699d-4932-b9aa-2a6d845eacd2"}
+{"type":"run_end","run_id":"run-3","status":"passed","summary":"","reason":"replay completed","duration":0.2,"final_url":"http://localhost:5173/","actions_executed":2,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/3/replay-test/screenshots/step_002.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/3/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":4,"status":"passed","duration_s":0.2,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_evidence_ingest","status":"ok","evidence_id":"8f9de9e0-0dec-417f-856d-e43c6e4766f0"}
+{"type":"test_md_summary","overall_status":"passed","duration_s":11,"steps":{"total":4,"passed":4,"failed":0,"skipped":0,"replay_decisions":4,"author_decisions":0},"retries":{"triggered":false},"commit":{"committed":false,"reason":"readonly_fallback"},"artifacts":{"replaced":false},"upload":{"performed":true,"succeeded":true},"cancelled":false}
+{"type":"test_md_done","overall_status":"passed","duration_s":11,"session_id":"3631c668-4086-41a6-abf1-70d90b14cbd1"}
+{"source":"kane-loop","type":"flow_end","phase":"verify","flow":"darkmode_test.md","ts":"2026-08-21T07:38:57Z","status":"passed","summary":"","one_liner":"all steps passed","reason":"replay completed","duration":11,"credits":0,"reason_code":"success.complete","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/3631c668-4086-41a6-abf1-70d90b14cbd1/scratch/3/replay-test","session_dir":"","test_url":"http://localhost:5173/"}
+{"source":"kane-loop","type":"verify_result","phase":"verify","ts":"2026-08-21T07:38:57Z","status":"green"}
+{"source":"kane-loop","type":"gate_start","phase":"gate","ts":"2026-08-21T07:39:04Z"}
+{"source":"kane-loop","type":"flow_start","phase":"gate","ts":"2026-08-21T07:39:04Z","flow":"darkmode_test.md"}
+{"type":"test_md_step_start","step_index":1,"heading":"Open the notes app","ref":null}
+{"type":"run_start","objective":"Open http://localhost:5173 and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297951,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"https://kaneai-playground.lambdatest.io/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.3,"summary":"navigate: Navigate to http://localhost:5173","ordinal":1,"id":"0-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"52390dba-d17e-4ede-a6cd-254b2eba637a"}
+{"type":"run_end","run_id":"run-0","status":"passed","summary":"","reason":"replay completed","duration":0.31,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/0/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/0/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":1,"status":"passed","duration_s":0.31,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":2,"heading":"Turn on dark mode","ref":null}
+{"type":"run_start","objective":"Click the dark mode toggle in the header. Assert the page background is now a dark colour.","timestamp":1787297951,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 3 actions","recording_length":3}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Clicking the dark mode toggle button","action_type":"click","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Clicking the dark mode toggle button","action_type":"click"}
+{"type":"step_end","index":1,"status":"passed","duration":0.7,"summary":"click: Clicking the dark mode toggle button","ordinal":2,"id":"1-1","kind":"click","screenshot":"screenshot.jpg","action_id":"b2249211-cca7-4bbc-86df-04077032b853"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"action","detail":"Checking whether the page background is a dark colour","action_type":"analyze","success":true}
+{"type":"step_event","index":2,"event":"reasoning","detail":"Checking whether the page background is a dark colour","action_type":"analyze"}
+{"type":"step_end","index":2,"status":"passed","duration":7.7,"summary":"analyze: Checking whether the page background is a dark colour","ordinal":3,"id":"1-2","kind":"analyze","screenshot":"screenshot.jpg","action_id":"79481cb1-52af-4648-8532-50dcf679b606"}
+{"type":"step_start","index":3,"objective":"Step 3"}
+{"type":"step_event","index":3,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":3,"event":"assertion","detail":"the page background is now a dark colour","passed":true}
+{"type":"step_end","index":3,"status":"passed","duration":0,"summary":"assert: the page background is now a dark colour","ordinal":4,"id":"1-3","kind":"assert","screenshot":"screenshot.jpg","action_id":"915568a7-3bdb-4276-b6ec-de0655b2cc21"}
+{"type":"run_end","run_id":"run-1","status":"passed","summary":"","reason":"replay completed","duration":8.44,"final_url":"http://localhost:5173/","actions_executed":3,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/1/replay-test/screenshots/step_003.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/1/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_colour_check":{"syntax":"{{page_background_dark_colour_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":2,"status":"passed","duration_s":8.44,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":3,"heading":"Load the page again from scratch","ref":null}
+{"type":"run_start","objective":"Navigate to http://localhost:5173 again so the page loads completely fresh, and wait for the \"Kane Notes\" heading to be visible.","timestamp":1787297959,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 1 actions","recording_length":1}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Navigate to http://localhost:5173","action_type":"navigate","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Navigate to http://localhost:5173","action_type":"navigate"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"navigate: Navigate to http://localhost:5173","ordinal":5,"id":"2-1","kind":"navigate","screenshot":"screenshot.jpg","action_id":"9f0c48c0-850e-4eb1-af3d-84d854139721"}
+{"type":"run_end","run_id":"run-2","status":"passed","summary":"","reason":"replay completed","duration":0.12,"final_url":"http://localhost:5173/","actions_executed":1,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/2/replay-test/screenshots/step_001.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/2/replay-test","total_runs":1,"context":{"memory":{},"variables":{},"pointer":""},"variables_out":{},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":3,"status":"passed","duration_s":0.12,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_step_start","step_index":4,"heading":"Verify dark mode survived","ref":null}
+{"type":"run_start","objective":"Assert that the page background is still dark.","timestamp":1787297960,"environment":{"resolution":"1920x993"}}
+{"type":"step_event","index":0,"event":"replay_started","detail":"replaying 2 actions","recording_length":2}
+{"type":"step_start","index":1,"objective":"Step 1"}
+{"type":"step_event","index":1,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":1,"event":"action","detail":"Checking whether the page background is dark","action_type":"analyze","success":true}
+{"type":"step_event","index":1,"event":"reasoning","detail":"Checking whether the page background is dark","action_type":"analyze"}
+{"type":"step_end","index":1,"status":"passed","duration":0.1,"summary":"analyze: Checking whether the page background is dark","ordinal":6,"id":"3-1","kind":"analyze","screenshot":"screenshot.jpg","action_id":"7c5c6193-b553-47f6-b364-389ceeb70ff2"}
+{"type":"step_start","index":2,"objective":"Step 2"}
+{"type":"step_event","index":2,"event":"screenshot","detail":"http://localhost:5173/"}
+{"type":"step_event","index":2,"event":"assertion","detail":"the page background is still dark","passed":true}
+{"type":"step_end","index":2,"status":"passed","duration":0,"summary":"assert: the page background is still dark","ordinal":7,"id":"3-2","kind":"assert","screenshot":"screenshot.jpg","action_id":"5e1b9e23-699d-4932-b9aa-2a6d845eacd2"}
+{"type":"run_end","run_id":"run-3","status":"passed","summary":"","reason":"replay completed","duration":0.2,"final_url":"http://localhost:5173/","actions_executed":2,"screenshot_path":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/3/replay-test/screenshots/step_002.png","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/3/replay-test","total_runs":1,"context":{"memory":{},"variables":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"true","secret":false}},"pointer":""},"variables_out":{"page_background_dark_check":{"syntax":"{{page_background_dark_check}}","value":"true","secret":false}},"store_out":{},"result_code":100,"reason_code":"success.complete"}
+{"type":"test_md_step_end","step_index":4,"status":"passed","duration_s":0.2,"ref_kind":null,"unit_kind":null,"inlined_count":null,"failed_sub_step_index":null}
+{"type":"test_md_evidence_ingest","status":"ok","evidence_id":"2d8c3fd0-dc17-47c5-b567-f9a078a16202"}
+{"type":"test_md_summary","overall_status":"passed","duration_s":13,"steps":{"total":4,"passed":4,"failed":0,"skipped":0,"replay_decisions":4,"author_decisions":0},"retries":{"triggered":false},"commit":{"committed":false,"reason":"readonly_fallback"},"artifacts":{"replaced":false},"upload":{"performed":true,"succeeded":true},"cancelled":false}
+{"type":"test_md_done","overall_status":"passed","duration_s":13,"session_id":"b1ece39b-4e26-48ec-b9bd-73c6b279b21f"}
+{"source":"kane-loop","type":"flow_end","phase":"gate","flow":"darkmode_test.md","ts":"2026-08-21T07:39:25Z","status":"passed","summary":"","one_liner":"all steps passed","reason":"replay completed","duration":13,"credits":0,"reason_code":"success.complete","run_dir":"/Users/oluwademilade/.testmuai/kaneai/sessions/b1ece39b-4e26-48ec-b9bd-73c6b279b21f/scratch/3/replay-test","session_dir":"","test_url":"http://localhost:5173/"}
+{"source":"kane-loop","type":"gate_result","phase":"gate","ts":"2026-08-21T07:39:25Z","status":"green","detail":"gate released — every flow passes, oracle intact"}
+{"source":"kane-loop","type":"guard_deny","phase":"guard","ts":"2026-08-21T07:40:02Z","target":"cd \"/Users/oluwademilade/Desktop/Kane Loop\" && cp .kane-events.ndjson evidence/ui/live-loop.events.ndjson && echo \"captured $(wc -l < evidence/ui/live-loop.events.ndjson | tr -d ' ') lines\"; echo \"=== durations + credits (must NOT be 150ms) ===\"; grep -o '\"status\":\"[a-z]*\",\"summary[^}]*\"duration\":[0-9.]*' evidence/ui/live-loop.events.ndjson 2>/dev/null | head -4; echo \"--- via jq ---\"; jq -rc 'select(.type==\"flow_end\")' evidence/ui/live-loop.events.ndjson 2>/dev/null","reason":"Kane's test flows are immutable ground truth — they are the only reason a green means anything, so the loop will not let you edit them. If the flow looks wrong, say so in your reply and stop; do not work around it. Otherwise fix the application code in target-app/src and save, and Kane will re-run."}

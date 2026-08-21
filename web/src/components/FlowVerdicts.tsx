@@ -1,16 +1,18 @@
-import { formatDuration } from '../lib/format'
+import { formatCredits, formatDuration } from '../lib/format'
 import type { FlowVerdict } from '../lib/store'
 
 const PILL: Record<FlowVerdict['status'], string> = {
   passed: 'border-green/50 bg-green/15 text-green',
   failed: 'border-red/60 bg-red/15 text-red-soft',
   error: 'border-amber/50 bg-amber/15 text-amber',
+  timeout: 'border-amber/50 bg-amber/15 text-amber',
 }
 
 const EDGE: Record<FlowVerdict['status'], string> = {
   passed: 'border-l-green',
   failed: 'border-l-red',
   error: 'border-l-amber',
+  timeout: 'border-l-amber',
 }
 
 /**
@@ -61,7 +63,7 @@ export function FlowVerdicts({ flows }: { flows: FlowVerdict[] }) {
                 ) : null}
                 <span className="shrink-0 font-mono text-[10.5px] text-dim tabular-nums">
                   {formatDuration(flow.durationMs)}
-                  {flow.credits !== undefined ? ` · ${flow.credits} cr` : ''}
+                  {flow.credits !== undefined ? ` · ${formatCredits(flow.credits)} cr` : ''}
                 </span>
               </div>
               {flow.oneLiner ? (

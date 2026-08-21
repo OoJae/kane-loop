@@ -51,10 +51,14 @@ and watch the loop close: **RED → failure injected → agent self-corrects →
 **Requirements:** Node ≥ 18, Chrome, `jq`, Claude Code, and `kane-cli` authenticated
 (`npm i -g @testmuai/kane-cli && kane-cli login`).
 
-![The loop closing live](evidence/ui/gate3-live-loop-closed.png)
+![The loop closing live](evidence/ui/live-loop-hero.png)
 
-*Real run, not a mockup: Kane went RED at 00:44:07, the failure was injected into the agent's
-context, the agent corrected itself, and Kane went GREEN at 00:44:29.*
+*One frame, one real run. The agent edits `App.tsx` → Kane fails in a real browser → the failure is
+injected into the agent's context (the red card) → the agent reads it and answers "Reading was only
+half of it — nothing writes the value yet" → GREEN, and the Stop gate releases. The raw event log
+for this exact run is committed at
+[`evidence/ui/live-loop.events.ndjson`](evidence/ui/live-loop.events.ndjson) — every number on
+screen is in it.*
 
 **Verified on a clean clone.** `git clone` → `./scripts/dev.sh` → all three services come up, then
 one prompt reproduces the whole loop end to end: RED, a self-correction, GREEN, and the Stop gate

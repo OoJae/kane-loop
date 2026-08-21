@@ -16,7 +16,9 @@
 export type KanePhase = 'verify' | 'gate'
 
 /** `flow_end.status` — the only verdict in the protocol. */
-export type FlowStatus = 'passed' | 'failed' | 'error'
+/** `flow_end.status`. `timeout` is Kane exit 3 — real, and previously rendered
+ *  a pill with className "undefined" because no style map covered it. */
+export type FlowStatus = 'passed' | 'failed' | 'error' | 'timeout'
 
 /** `verify_result.status` / `gate_result.status`. */
 /** `verify_result.status` / `gate_result.status`. `tampered` is gate-only: the
