@@ -1,7 +1,19 @@
 import pw from '/opt/homebrew/lib/node_modules/@playwright/test/index.js'
 export const { chromium } = pw
 export const B = 'https://kane-loop-production.up.railway.app'
-export const KEY = 'kl-40c711539a74a737'
+/**
+ * The run key is an EXECUTION credential — a key-holder gets Bash(npm:*) in the
+ * container. It is read from the environment and never written down here.
+ *
+ *   KANE_RUN_KEY=… node shoot-console.mjs
+ *
+ * An earlier revision of this file hard-coded it, and that revision was pushed
+ * to a public repo. The key it exposed has been rotated.
+ */
+export const KEY = process.env.KANE_RUN_KEY ?? ''
+if (!KEY) {
+  console.error('✗ KANE_RUN_KEY is not set — the capture scripts cannot start a run without it.')
+}
 
 /** Eased smooth scroll driven in-page, so the capture sees real motion. */
 export async function glide(page, toY, ms) {
