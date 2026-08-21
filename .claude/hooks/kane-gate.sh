@@ -109,6 +109,11 @@ printf '%s' "$BLOCKS" >"$FAILCOUNT"
 emit_event gate_result status "red" detail "$KANE_FAILS" blocks "$BLOCKS"
 
 REASON="$(printf 'Kane is still failing, so you are not done: %s\nFix the application code in target-app/src (never the tests) and save. Kane re-runs automatically on every save, and this completion gate re-checks it in a real browser when you try to finish.' "$KANE_FAILS" | head -c 4000)"
+if [ -n "${KANE_SHOT:-}" ]; then
+  REASON="${REASON}
+
+Kane's screenshot of the failing step is at ${KANE_SHOT} — open it with Read to see what the browser rendered."
+fi
 
 # Emit both documented block shapes. Recent Claude Code versions read the
 # structured permissionDecision; older ones read decision/reason. Phase 2

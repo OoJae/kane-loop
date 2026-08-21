@@ -2,6 +2,18 @@ import { clockTime } from '../lib/format'
 import { SHOT_ENDPOINT } from '../lib/config'
 import type { KanePhase } from '../lib/protocol'
 
+/**
+ * A live run reports an absolute filesystem path, which only the orchestrator
+ * can read — that goes through /shot. A committed recording ships the PNG
+ * beside itself and reports a relative one, so a deployed replay stays
+ * self-contained and needs no orchestrator at all.
+ */
+function shotSrc(value: string): string {
+  if (/^https?:\/\//i.test(value)) return value
+  if (!value.startsWith('/')) return `${import.meta.env.BASE_URL || '/'}${value}`
+  return `${SHOT_ENDPOINT}?p=${encodeURIComponent(value)}`
+}
+
 interface KaneInjectionCardProps {
   phase: KanePhase
   detail: string
@@ -66,7 +78,7 @@ export function KaneInjectionCard({
         {screenshot === undefined || screenshot === '' ? null : (
           <figure className="mt-3 overflow-hidden rounded-lg border border-red/40 bg-[#12060a]">
             <img
-              src={`${SHOT_ENDPOINT}?p=${encodeURIComponent(screenshot)}`}
+              src={shotSrc(screenshot)}
               alt="What Kane's browser saw when the assertion failed"
               loading="lazy"
               className="block max-h-[280px] w-full object-cover object-top"

@@ -57,6 +57,7 @@ emit_flow_end() {
       credits:(($credits|tonumber?)//null),
       reason_code:(.reason_code//""),
       run_dir:(.run_dir//""),session_dir:(.session_dir//""),
+      screenshot:(.screenshot_path//""),
       test_url:(.test_url//.final_url//"")}' \
     >>"$EVENTS" 2>/dev/null
 }
@@ -126,6 +127,7 @@ kane_available() {
 # pass is exactly the fake verification this project refuses to ship.
 run_kane_suite() {
   KANE_FAILS=""
+  KANE_SHOT=""
   KANE_ANY_RAN=0
   KANE_FLOW_COUNT=0
   local t run_end status reason name
@@ -245,6 +247,9 @@ run_kane_suite() {
 
     if [ "$status" != "passed" ]; then
       reason="$(printf '%s' "$run_end" | jq -r '.reason // .one_liner // "no reason reported"')"
+      # Kane screenshots the step that decided the verdict. Handing the agent
+      # the path turns "your assertion failed" into something it can look at.
+      KANE_SHOT="$(printf '%s' "$run_end" | jq -r '.screenshot_path // empty')"
 
       if [ -n "$assertion" ]; then
         reason="failed assertion: \"${assertion}\" (${reason})"

@@ -60,6 +60,13 @@ if [ -n "$KANE_FAILS" ]; then
   #    inserted at the point the hook fired; Claude reads it on the next model
   #    request. Cap well under the 10,000-char limit, actionable reason first.
   MSG="$(printf 'KANE VERIFICATION FAILED after your last edit.\n\n%s\n\nThis is a real browser run against the running app, not a unit test. Read the failure literally, fix the application code in target-app/src, and save — Kane re-runs automatically on every save. Do NOT edit anything in tests/.' "$KANE_FAILS" | head -c 4000)"
+  # The agent can open PNGs, so point it at the frame Kane judged rather
+  # than leaving it to infer the page state from one line of prose.
+  if [ -n "${KANE_SHOT:-}" ]; then
+    MSG="${MSG}
+
+Kane's screenshot of the failing step is at ${KANE_SHOT} — open it with Read to see exactly what the browser rendered."
+  fi
   jq -nc --arg ctx "$MSG" \
     '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$ctx}}'
 else

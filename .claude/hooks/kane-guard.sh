@@ -63,8 +63,11 @@ case "$TOOL" in
       # The objectives themselves, AND output-<stem>/ — the cached recordings
       # Kane actually replays. Rewriting a cached action is a far more effective
       # way to fake a pass than editing the prose, so both are protected.
-      */tests/*)            deny "$FILE" "$TESTS_MSG" ;;
-      */.claude/*)          deny "$FILE" "$CONFIG_MSG" ;;
+      # Anchored to $ROOT. Bare */tests/* and */.claude/* matched those
+      # directory names ANYWHERE on the filesystem — including the user's
+      # own ~/.claude, which is not this project's business to protect.
+      "$ROOT"/tests/*)      deny "$FILE" "$TESTS_MSG" ;;
+      "$ROOT"/.claude/*)    deny "$FILE" "$CONFIG_MSG" ;;
       */kane-loop.config.json) deny "$FILE" "$CONFIG_MSG" ;;
       # The gate's own state. .kane-failcount is load-bearing: the Stop gate
       # releases without verifying anything once it reads >= KANE_MAX_BLOCKS, so
@@ -85,6 +88,23 @@ if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
   # this, `ls tests/ 2>/dev/null` contains a ">" and was denied — which stopped
   # the agent READING the spec. Reading the objective is legitimate.
   SAFE_CMD="$(printf '%s' "$CMD" | sed -E 's/[0-9]*>>?[[:space:]]*\/dev\/null//g; s/[0-9]*>&[0-9]//g')"
+
+  # A heredoc body is DATA, not code. Without this, writing a file whose
+  # CONTENT merely names a protected path — a commit message, a .dockerignore
+  # — was parsed as though each of its lines were a command, and denied.
+  # The delimiter line is kept, so `cat <<EOF > <protected>` is still caught
+  # by the redirect check below.
+  SAFE_CMD="$(printf '%s\n' "$SAFE_CMD" | awk '
+    BEGIN { in_doc = 0 }
+    {
+      if (in_doc) { if ($0 == delim) { in_doc = 0 }; next }
+      if (match($0, /<<-?[[:space:]]*'"'"'?[A-Za-z_][A-Za-z0-9_]*'"'"'?/)) {
+        d = substr($0, RSTART, RLENGTH)
+        sub(/^<<-?[[:space:]]*/, "", d); gsub(/'"'"'/, "", d)
+        delim = d; in_doc = 1
+      }
+      print
+    }')"
 
   # Some commands rewrite files chosen by their INPUT, not by their arguments:
   # `git apply patch`, `patch < p`, `tar -x`, `unzip`, `git stash pop` can all
