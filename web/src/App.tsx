@@ -12,6 +12,7 @@ import { useDemo } from './lib/useDemo'
 import {
   DIAG_ENDPOINT,
   HEALTH_ENDPOINT,
+  RESET_ENDPOINT,
   RUN_ENDPOINT,
   SERVER_URL,
   STOP_ENDPOINT,
@@ -280,6 +281,41 @@ export default function App() {
   }, [demo, runKey])
 
   /**
+   * Put the demo back to broken.
+   *
+   * Whoever closes the loop leaves the bug fixed, so without this the hosted
+   * demo works exactly once and everyone after them sees an app that already
+   * passes. Reseeding is what makes it repeatable.
+   */
+  const [resetting, setResetting] = useState(false)
+  const resetDemo = useCallback(async () => {
+    if (resetting || runKey === '') return
+    setResetting(true)
+    setError(null)
+    try {
+      const response = await fetch(RESET_ENDPOINT, {
+        method: 'POST',
+        headers: { 'x-kane-key': runKey },
+      })
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null
+        setError(body?.error ?? `Could not reset the demo: ${response.status}`)
+        return
+      }
+      dispatch({ kind: 'reset' })
+      dispatch({
+        kind: 'notice',
+        text: 'Demo reset — the dark mode bug is back. Reload the app pane to see it.',
+        at: Date.now(),
+      })
+    } catch {
+      setError(`Can't reach the orchestrator at ${SERVER_URL}.`)
+    } finally {
+      setResetting(false)
+    }
+  }, [resetting, runKey])
+
+  /**
    * Validate a pasted key against GET /diag — the same gate as /run, but free:
    * no credits, no side effects. So a key can be proved good before it is ever
    * used to spend anything.
@@ -369,6 +405,8 @@ export default function App() {
         recorded={recording !== undefined}
         promptRef={promptInput}
         keyArmed={runKey !== '' && !demo}
+        onReset={() => void resetDemo()}
+        resetting={resetting}
         keyHint={runKey === '' ? '' : runKey.slice(-4)}
         onClearKey={() => {
           setRunKey('')

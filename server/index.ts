@@ -792,6 +792,46 @@ app.get("/shot", (req, res) => {
   res.sendFile(resolved);
 });
 
+/**
+ * Put the demo back to its seeded, broken state.
+ *
+ * A hosted demo of a closed loop is single-use without this: the first visitor
+ * who closes the loop leaves the bug FIXED, and everyone after them opens an app
+ * that already works and proves nothing. Judges need to be able to run it more
+ * than once.
+ *
+ * Deliberately does not shell out to scripts/demo-reset.sh — that script leans on
+ * `git checkout`, and the container's tree is not a working copy worth trusting
+ * for this. The seed file is the source of truth, exactly as that script argues.
+ */
+app.post("/reset", requireKey, (_req, res) => {
+  if (activeRun) {
+    res.status(409).json({ ok: false, error: "a run is in flight — stop it before resetting" });
+    return;
+  }
+  const seed = path.join(TARGET_APP_DIR, ".seed", "App.tsx");
+  const live = path.join(TARGET_APP_DIR, "src", "App.tsx");
+  try {
+    const buggy = fs.readFileSync(seed, "utf8");
+    // Never restore a "seed" that is quietly the fixed version — that would hand
+    // the next visitor a green demo and call it a reset.
+    if (buggy.includes("localStorage")) {
+      res.status(500).json({ ok: false, error: "seed is not the buggy version; refusing to reset" });
+      return;
+    }
+    fs.writeFileSync(live, buggy);
+    fs.writeFileSync(EVENTS_FILE, "");
+    offset = 0;
+    for (const f of [".kane.lock", ".kane-failcount", ".kane-stderr.log", ".kane-oracle.sha256"]) {
+      fs.rmSync(path.join(ROOT, f), { force: true, recursive: true });
+    }
+    console.log("[reset] demo re-seeded");
+    res.json({ ok: true, reseeded: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: `reset failed: ${(err as Error).message}` });
+  }
+});
+
 // Gated. Unauthenticated, this was a free and unlimited way to destroy evidence
 // mid-run, leave target-app/src half-written with no verdict, and guarantee the
 // hosted demo never closes a loop. Scoping by runId instead was rejected: the id

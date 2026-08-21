@@ -1,0 +1,13 @@
+# Raw capture and render output: hundreds of MB of derived footage. The film's
+# SOURCE (composition, brief, voiceover script) is committed; the pixels are not.
+capture/
+assets/
+videos/*/assets/
+videos/*/capture/
+videos/*/renders/
+videos/*/node_modules/
+videos/*/fonts/
+videos/*/audio/
+*.webm
+*.m4a
+*.wav

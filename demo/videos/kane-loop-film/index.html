@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* Fonts are local files pulled from the site's own capture — a render-time
+         network fetch is banned, and these are the exact faces the product uses. */
+      @font-face {
+        font-family: "ArchivoX";
+        src: url("fonts/ArchivoExpanded.ttf") format("truetype");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "ArchivoBody";
+        src: url("fonts/Archivo.ttf") format("truetype");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "JBMono";
+        src: url("fonts/JetBrainsMono.ttf") format("truetype");
+        font-weight: 100 800;
+        font-display: block;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #08090c; }
+
+      /* ── the palette. No colour of its own: ink, paper, ice, dim, line.
+            #ff3b52 and #34e39b belong to the verdicts and appear only inside
+            the footage, where the product itself renders them. ───────────── */
+      :root {
+        --ink: #08090c;
+        --paper: #f4f5f7;
+        --ice: #f3f5f8;
+        --dim: #6b7585;
+        --mist: #98a3b3;   /* labels sitting over footage need the extra step */
+        --line: #242a34;
+      }
+
+      .fill { position: absolute; inset: 0; }
+
+      /* Display is uppercase Archivo Expanded — a deliberate deviation from the
+         preset's "never uppercase" rule, because that IS the product's own
+         display voice and matching it matters more than matching the preset. */
+      .display {
+        font-family: "ArchivoX", sans-serif;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: -0.028em;
+        line-height: 0.9;
+        color: var(--ice);
+      }
+      .body {
+        font-family: "ArchivoBody", sans-serif;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--ice);
+      }
+      /* Anything the machine said, and every label. */
+      .mono {
+        font-family: "JBMono", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 700;
+        color: var(--mist);
+      }
+
+      /* Footage is framed, not wallpapered — an artifact on a table. */
+      .plate {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--ink);
+      }
+      .plate video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+      .rail {
+        position: absolute;
+        left: 96px;
+        top: 84px;
+        font-size: 17px;
+      }
+      .rule { position: absolute; height: 1px; background: var(--line); }
+
+      /* Scene 01 / 09 wrappers — GSAP moves these, never the .clip itself. */
+      .stage { position: absolute; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="74"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Ground. On a full-bleed CHILD, never the root: the producer's frame
+           compositing can drop a root background and render black. -->
+      <div id="ground" class="clip" data-start="0" data-duration="74" data-track-index="0">
+        <div class="fill" style="background: var(--ink)"></div>
+      </div>
+
+      <!-- ══ 01 · COLD OPEN — 0:00–0:09 ══════════════════════════════════ -->
+      <div id="sc-01-coldopen" class="clip" data-start="0" data-duration="5.95" data-track-index="5">
+        <div class="stage">
+          <svg id="mark" width="132" height="132" viewBox="0 0 64 64"
+               style="position:absolute; left:96px; top:300px">
+            <g fill="none" stroke-width="7" stroke-linecap="round"
+               style="stroke-dasharray: 92; stroke-dashoffset: var(--draw, 92)">
+              <path d="M 32 6 A 26 26 0 0 1 32 58" stroke="#ff3b52" />
+              <path d="M 32 58 A 22 22 0 0 1 32 14" stroke="#34e39b" />
+            </g>
+          </svg>
+          <div id="co-l1" class="display" style="position:absolute; left:96px; top:492px; font-size:78px; max-width:1500px">
+            An agent finishes a job<br />and tells you it works.
+          </div>
+          <div id="co-l2" class="display" style="position:absolute; left:96px; top:772px; font-size:78px">
+            That isn't a result.
+          </div>
+          <div id="co-l3" class="display" style="position:absolute; left:96px; top:872px; font-size:78px; color:var(--dim)">
+            It's a claim.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 02 · THE BUG — 0:09–0:22 ════════════════════════════════════ -->
+      <video id="v-bug" class="clip" data-start="5.95" data-duration="9.33" data-track-index="1"
+             data-media-start="8.0" src="assets/02-loop-scroll.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-02-over" class="clip" data-start="5.95" data-duration="9.33" data-track-index="6">
+        <div class="stage">
+          <div id="s2-kick" class="rail mono">the seeded bug · dark mode does not persist</div>
+        </div>
+      </div>
+
+      <!-- ══ 03 · THE LOOP — 0:22–0:33 ═══════════════════════════════════ -->
+      <video id="v-loop" class="clip" data-start="15.28" data-duration="7.92" data-track-index="1"
+             data-media-start="9.5" src="assets/07-replay-loop.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-03-over" class="clip" data-start="15.28" data-duration="7.92" data-track-index="6">
+        <div class="stage">
+          <div id="s3-kick" class="rail mono">a hook fires a real chrome on every save</div>
+        </div>
+      </div>
+
+      <!-- ══ 04 · RED — 0:33–0:45 ════════════════════════════════════════ -->
+      <video id="v-red" class="clip" data-start="23.20" data-duration="7.74" data-track-index="1"
+             src="assets/slow-red.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-04-over" class="clip" data-start="23.20" data-duration="7.74" data-track-index="6">
+        <div class="stage">
+          <!-- Every figure here is read out of evidence/ui/live-loop.events.ndjson. -->
+          <div id="s4-card" style="position:absolute; left:96px; bottom:96px; padding:26px 34px; border:1px solid var(--line); background:rgba(8,9,12,0.92)">
+            <div class="mono" style="font-size:15px">failed assertion</div>
+            <div class="body" style="font-family:'JBMono',monospace; font-size:26px; margin-top:12px; letter-spacing:0">
+              "the page background is still dark"
+            </div>
+            <div class="mono" style="font-size:15px; margin-top:14px; color:var(--dim)">
+              exit 1 · 23s · 2.0848 credits · 3 of 4 steps passed
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 05 · THE INJECTION — 0:45–0:58 ══════════════════════════════ -->
+      <!-- The push-in is a transform on the A-roll clip itself, which is the
+           documented reframing pattern. Nesting the video inside a timed wrapper
+           instead would hand playback to no one and freeze it in the render. -->
+      <video id="v-inject" class="clip" data-start="30.94" data-duration="10.14" data-track-index="1"
+             src="assets/slow-inject.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-05-over" class="clip" data-start="30.94" data-duration="10.14" data-track-index="6">
+        <div class="stage">
+          <div id="s5-kick" class="rail mono">the failure returns itself · additionalContext</div>
+          <div id="s5-line" class="display"
+               style="position:absolute; left:96px; bottom:96px; font-size:60px; max-width:1120px;
+                      padding:30px 38px; background:rgba(8,9,12,0.94); border:1px solid var(--line)">
+            Nobody pasted<br />an error.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 06 · GREEN — 0:58–1:09 ══════════════════════════════════════ -->
+      <video id="v-green" class="clip" data-start="41.08" data-duration="6.48" data-track-index="1"
+             data-media-start="33.2" src="assets/07-replay-loop.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-06-over" class="clip" data-start="41.08" data-duration="6.48" data-track-index="6">
+        <div class="stage">
+          <div id="s6-kick" class="rail mono">same browser · same assertion · different answer</div>
+        </div>
+      </div>
+
+      <!-- ══ 07 · THE SPINE — 1:09–1:24 ══════════════════════════════════ -->
+      <video id="v-spine" class="clip" data-start="47.56" data-duration="12.94" data-track-index="1"
+             data-media-start="2" src="assets/04-how-it-works.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-07-over" class="clip" data-start="47.56" data-duration="12.94" data-track-index="6">
+        <div class="stage">
+          <div id="s7-kick" class="rail mono">three hooks · and a checksum</div>
+        </div>
+      </div>
+
+      <!-- ══ 08 · RECEIPTS — 1:24–1:34 ═══════════════════════════════════ -->
+      <video id="v-evidence" class="clip" data-start="60.50" data-duration="3.55" data-track-index="1"
+             data-media-start="3" src="assets/05-evidence.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <video id="v-log" class="clip" data-start="64.05" data-duration="3.55" data-track-index="1"
+             data-media-start="3" src="assets/06-log.mp4" muted playsinline
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video>
+      <div id="sc-08-over" class="clip" data-start="60.50" data-duration="7.10" data-track-index="6">
+        <div class="stage">
+          <div id="s8-kick" class="rail mono">committed · raw ndjson · including what went wrong</div>
+        </div>
+      </div>
+
+      <!-- ══ 09 · CLOSE — 1:34–1:41 ══════════════════════════════════════ -->
+      <div id="sc-09-close" class="clip" data-start="67.60" data-duration="6.4" data-track-index="5">
+        <div class="stage">
+          <div id="cl-line" class="display" style="position:absolute; left:96px; top:398px; font-size:118px; max-width:1740px">
+            Give your agent<br />eyes and a spine.
+          </div>
+          <div id="cl-rule" class="rule" style="left:96px; top:742px; width:1728px"></div>
+          <div id="cl-url" class="mono" style="position:absolute; left:96px; top:786px; font-size:22px; color:var(--ice)">
+            kane-loop-production.up.railway.app
+          </div>
+        </div>
+      </div>
+
+      <!-- The voiceover. One continuous read, with the duplicated section-07
+           take removed; every cut above is placed on this file's own word
+           timings, taken from the transcript rather than estimated. -->
+      <audio id="vo" src="audio/vo-edit.wav" data-start="0" data-duration="67.4"
+             data-track-index="20" data-volume="1"></audio>
+    </div>
+
+    <script>
+      // One paused timeline, built synchronously, registered under the root's
+      // composition id. The renderer seeks it — it is never played.
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // ── 01 cold open ───────────────────────────────────────────────────
+      // The mark draws itself: red arc, then green closing inside it. Bound
+      // through a CSS variable because stroke-dashoffset is not directly
+      // tweenable under the seek contract.
+      tl.fromTo("#mark", { "--draw": 92 }, { "--draw": 0, duration: 1.3, ease: "power2.inOut" }, 0.15);
+      tl.from("#co-l1", { opacity: 0, y: 26, duration: 0.8, ease: "power3.out" }, 0.25);
+      tl.from("#co-l2", { opacity: 0, y: 22, duration: 0.6, ease: "power3.out" }, 3.35);
+      tl.from("#co-l3", { opacity: 0, y: 22, duration: 0.6, ease: "power3.out" }, 4.30);
+      tl.to(["#co-l1", "#co-l2", "#co-l3", "#mark"], { opacity: 0, duration: 0.45 }, 5.45);
+      tl.set(["#co-l1", "#co-l2", "#co-l3", "#mark"], { opacity: 0 }, 5.95);
+
+      // ── kickers: each rides in, holds, leaves. Same move every time, so the
+      //    eye stops noticing it and reads the words instead. ──────────────
+      const kicker = (sel, at, dur) => {
+        tl.from(sel, { opacity: 0, x: -18, duration: 0.6, ease: "power3.out" }, at);
+        tl.to(sel, { opacity: 0, duration: 0.45 }, at + dur - 0.55);
+      };
+      kicker("#s2-kick", 6.2, 9.33);
+      kicker("#s3-kick", 15.5, 7.92);
+      kicker("#s5-kick", 31.2, 10.14);
+      kicker("#s6-kick", 41.3, 6.48);
+      kicker("#s7-kick", 47.8, 12.94);
+      kicker("#s8-kick", 60.7, 7.10);
+
+      // ── 04 red: the data card lands after the verdict, not with it ──────
+      tl.from("#s4-card", { opacity: 0, y: 20, duration: 0.6, ease: "power3.out" }, 25.6);
+      tl.to("#s4-card", { opacity: 0, duration: 0.45 }, 30.45);
+      tl.set("#s4-card", { opacity: 0 }, 30.94);
+
+      // ── 05 injection: a slow push onto the transcript pane ──────────────
+      tl.fromTo("#v-inject", { scale: 1, x: 0 }, { scale: 1.3, x: -210, duration: 10.14, ease: "none" }, 30.94);
+      tl.from("#s5-line", { opacity: 0, y: 24, duration: 0.7, ease: "power3.out" }, 36.7);
+      tl.to("#s5-line", { opacity: 0, duration: 0.45 }, 40.5);
+
+      // ── 09 close ───────────────────────────────────────────────────────
+      tl.from("#cl-line", { opacity: 0, y: 30, duration: 0.85, ease: "power3.out" }, 67.9);
+      tl.fromTo("#cl-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "power3.inOut" }, 68.7);
+      tl.from("#cl-url", { opacity: 0, duration: 0.65 }, 69.4);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

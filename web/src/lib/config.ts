@@ -48,6 +48,8 @@ export const HEALTH_ENDPOINT = `${SERVER_URL}/health`
  * makes it the right way to check a pasted key before spending anything.
  */
 export const DIAG_ENDPOINT = `${SERVER_URL}/diag`
+/** Put the seeded bug back, so the demo can be run more than once. */
+export const RESET_ENDPOINT = `${SERVER_URL}/reset`
 /** The orchestrator serves saved Kane artefacts here. */
 export const EVIDENCE_BASE = `${SERVER_URL}/evidence`
 /** Kane's screenshots live outside the repo, so the orchestrator serves them. */

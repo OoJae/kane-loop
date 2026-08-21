@@ -23,6 +23,9 @@ interface TopBarProps {
   /** Last four characters only — enough to tell one key from another. */
   keyHint?: string
   onClearKey?: () => void
+  /** Put the seeded bug back, so the demo can be run again. */
+  onReset?: () => void
+  resetting?: boolean
 }
 
 export function TopBar({
@@ -41,6 +44,8 @@ export function TopBar({
   keyArmed = false,
   keyHint = '',
   onClearKey,
+  onReset,
+  resetting = false,
 }: TopBarProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -130,6 +135,15 @@ export function TopBar({
                 key ····{keyHint}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={onReset}
+              disabled={resetting}
+              title="Restore the seeded dark-mode bug so the loop can be run again from scratch"
+              className="shrink-0 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] font-bold text-dim uppercase transition-colors hover:border-dim hover:text-mist disabled:opacity-40"
+            >
+              {resetting ? '…' : 'reset demo'}
+            </button>
             <button
               type="button"
               onClick={onClearKey}
