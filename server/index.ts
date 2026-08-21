@@ -8,7 +8,7 @@
  *   POST /stop   kills the in-flight agent
  *   GET  /health liveness + whether a run is in flight
  *   /evidence    static Kane artifacts (videos, .evidence packs)
- *   WS  :4000    replay of the last ~200 loop events, then live
+ *   WS  :4000    replay of the last ~2000 loop events, then live
  *
  * It also tails `.kane-events.ndjson` at the repo root — the append-only file
  * the hooks write (see docs/event-protocol.md). That file is the contract; the
@@ -73,7 +73,7 @@ const PORT = Number(process.env.PORT ?? 4000);
 const CLAUDE_BIN = process.env.CLAUDE_BIN ?? "claude";
 const UI_ORIGIN = process.env.KANE_UI_ORIGIN ?? "http://localhost:4321";
 
-const REPLAY_LINES = 200;
+const REPLAY_LINES = 2000;
 /** Cap on how much of the tail we read back for replay. */
 const REPLAY_MAX_BYTES = 1_000_000;
 /** fs.watch is primary; this is the safety net for missed/coalesced events. */
@@ -229,7 +229,7 @@ function startTailer(): void {
   }
 }
 
-/** Last ~200 lines of the log, for a browser that joins mid-run. */
+/** Last ~2000 lines of the log, for a browser that joins mid-run. */
 async function readReplayLines(): Promise<JsonValue[]> {
   const stat = await fsp.stat(EVENTS_FILE).catch(() => null);
   if (!stat || stat.size === 0) return [];

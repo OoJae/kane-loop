@@ -11,6 +11,31 @@ SERVER_PORT=4000
 WEB_PORT=4321
 
 say() { printf '\033[1;36m▸\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33m!\033[0m %s\n' "$1"; }
+die() { printf '\033[1;31m✗ %s\033[0m\n' "$1" >&2; exit 1; }
+
+# --- preflight ---------------------------------------------------------------
+# Without jq the hooks exit silently and the UI sits at IDLE forever with no
+# error — the worst possible failure because it looks like nothing is wrong.
+command -v jq >/dev/null 2>&1 || die "jq is required by the Kane hooks (brew install jq)"
+command -v node >/dev/null 2>&1 || die "node is required"
+
+if command -v kane-cli >/dev/null 2>&1; then
+  # whoami is free. An expired token makes every run fail as if the app were
+  # broken, which sends the agent off fixing code that was never wrong.
+  if ! kane-cli whoami 2>/dev/null | grep -q "Authenticated"; then
+    warn "kane-cli is not authenticated — run: kane-cli login --oauth"
+    warn "until then Kane cannot verify anything and the loop will not close."
+  fi
+else
+  warn "kane-cli not found — install with: npm i -g @testmuai/kane-cli"
+fi
+
+# Tests are ground truth. Git stores them 100644, so a fresh clone gets them
+# writable; re-assert read-only on every boot rather than trusting the clone.
+if compgen -G "$ROOT/tests/*_test.md" >/dev/null; then
+  chmod -w "$ROOT"/tests/*_test.md 2>/dev/null || true
+fi
 
 # --- free stale listeners ----------------------------------------------------
 for port in "$APP_PORT" "$SERVER_PORT" "$WEB_PORT"; do
@@ -23,7 +48,7 @@ for port in "$APP_PORT" "$SERVER_PORT" "$WEB_PORT"; do
 done
 
 # --- install on first run ----------------------------------------------------
-for dir in target-app server web; do
+for dir in target-app server web mcp; do
   if [ -f "$ROOT/$dir/package.json" ] && [ ! -d "$ROOT/$dir/node_modules" ]; then
     say "installing $dir dependencies (first run only)"
     (cd "$ROOT/$dir" && npm install --silent) || { echo "npm install failed in $dir"; exit 1; }

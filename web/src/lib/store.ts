@@ -491,11 +491,16 @@ function applyFlowEnd(
   })
 
   if (!passed) {
+    // A failure is final for the batch, so surface it the moment it lands.
     draft.batchHasFailure = true
     setStatus(draft, 'RED', at)
-  } else if (!draft.batchHasFailure) {
-    setStatus(draft, 'GREEN', at)
   }
+  // A PASSING flow deliberately does NOT set GREEN. With more than one flow in
+  // tests/, the first flow can pass seconds before a later one fails — which
+  // used to flip the banner to GREEN and fire the full-screen victory sweep
+  // immediately before the suite went red. Only verify_result / gate_result,
+  // which see the whole batch, may declare green. Per-flow pills still turn
+  // green instantly, so nothing is hidden.
 }
 
 function applyRawKaneLine(

@@ -46,13 +46,14 @@ emit_event() {
 # NOTE: `credits_consumed` is the real field name (v0.8.4) — the docs and the
 # build guide both say `credits`. Both are read, real name first.
 emit_flow_end() {
-  local flow="$1" verdict="$2" run_end="$3" credits="$4" headline="$5"
+  local flow="$1" verdict="$2" run_end="$3" credits="$4" headline="$5" duration="${6:-}"
   printf '%s' "$run_end" | jq -c \
     --arg source "kane-loop" --arg flow "$flow" --arg phase "${KANE_PHASE:-}" \
     --arg status "$verdict" --arg credits "$credits" --arg headline "$headline" \
+    --arg duration "$duration" \
     '{source:$source,type:"flow_end",phase:$phase,flow:$flow,ts:(now|todateiso8601),
       status:$status,summary:(.summary//""),one_liner:$headline,
-      reason:(.reason//""),duration:(.duration//null),
+      reason:(.reason//""),duration:(($duration|tonumber?)//.duration//null),
       credits:(($credits|tonumber?)//null),
       reason_code:(.reason_code//""),
       run_dir:(.run_dir//""),session_dir:(.session_dir//""),
@@ -161,8 +162,11 @@ run_kane_suite() {
     # test_md_summary.overall_status is the file-level verdict and the cleanest
     # signal Kane emits for a testmd run. It has agreed with the exit code on
     # every observed run; where they disagree, a non-pass wins.
-    local overall
+    local overall total_duration
     overall="$(jq -r 'select(.type=="test_md_summary") | .overall_status // empty' <"$raw" 2>/dev/null | tail -1)"
+    # The whole-file duration. run_end.duration is PER STEP, so reporting it as
+    # the flow duration showed "150ms" for a 26-second browser run.
+    total_duration="$(jq -r 'select(.type=="test_md_summary") | .duration_s // empty' <"$raw" 2>/dev/null | tail -1)"
     if [ -n "$overall" ] && [ "$overall" != "passed" ]; then
       status="failed"
     fi
@@ -198,7 +202,7 @@ run_kane_suite() {
       headline="$status"
     fi
 
-    emit_flow_end "$name" "$status" "$run_end" "$credits" "$headline"
+    emit_flow_end "$name" "$status" "$run_end" "$credits" "$headline" "$total_duration"
 
     if [ "$status" != "passed" ]; then
       reason="$(printf '%s' "$run_end" | jq -r '.reason // .one_liner // "no reason reported"')"

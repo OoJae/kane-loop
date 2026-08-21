@@ -78,13 +78,15 @@ Kane catches it in a real browser. Measured, from the frozen flow in [`tests/dar
 Raw NDJSON for both runs is in [`evidence/red/`](evidence/red/) and [`evidence/green/`](evidence/green/).
 A full headless loop transcript is in [`evidence/loop-terminal/`](evidence/loop-terminal/).
 
-This is the failure text the hook injects into the agent's context, verbatim:
+This is the failure text the hook injects into the agent's context — copied from
+[`evidence/ui/gate3-kane-events.ndjson`](evidence/ui/gate3-kane-events.ndjson), so you can diff it
+against the raw log yourself:
 
 ```
 KANE VERIFICATION FAILED after your last edit.
 
 [darkmode_test.md] step "Verify dark mode survived" failed — failed assertion:
-"the page background is dark" (Checkpoint assertion failed: "the page background is dark")
+"the page background is still dark" (assertion_failed: @ step 2)
 
 This is a real browser run against the running app, not a unit test. Read the failure
 literally, fix the application code in target-app/src, and save — Kane re-runs
@@ -97,7 +99,7 @@ automatically on every save. Do NOT edit anything in tests/.
 
 Two hooks, wired in [`.claude/settings.json`](.claude/settings.json):
 
-**[`kane-verify.sh`](.claude/hooks/kane-verify.sh) — PostToolUse.** Fires on `Edit|Write|MultiEdit`.
+**[`kane-verify.sh`](.claude/hooks/kane-verify.sh) — PostToolUse.** Fires on `Edit|Write|MultiEdit|NotebookEdit`.
 Scopes to `target-app/src/**` so editing a README never spawns Chrome. Takes an atomic
 `mkdir` lock (matching hooks run in *parallel*, so `touch` would race). Runs every flow in
 `tests/`, then returns Kane's failure as
@@ -106,12 +108,18 @@ Scopes to `target-app/src/**` so editing a README never spawns Chrome. Takes an 
 **[`kane-gate.sh`](.claude/hooks/kane-gate.sh) — Stop.** The spine. Re-runs the suite when the agent
 tries to finish and blocks while anything is red. Guarded by `stop_hook_active` so it can never
 loop forever, plus a max-4-blocks escape hatch that hands off for manual review rather than
-fighting. It emits **both** documented block shapes *and* exits 2 — the gate is the one
-mechanism that must never silently fail open.
+fighting. It emits **both** documented block shapes *and* exits 2, so a version difference in how
+Claude Code reads a block can't silently let the agent through.
 
-Why both hooks? PostToolUse is the fast feedback and the visible moment. Stop is the
-*guarantee*: even if a verify run is skipped (lock held, out of scope, timeout), the agent
-still cannot finish on a broken app.
+Why both hooks? PostToolUse is the fast feedback and the visible moment; Stop is the backstop that
+catches an edit the PostToolUse matcher missed.
+
+**Where the gate deliberately does *not* block:** if `kane-cli` is missing, the dev server is
+unreachable, or another Kane run already holds the lock, the gate releases rather than blocking on
+something it could not actually verify. That is a conscious choice — blocking an agent forever
+because a dev server died is worse than letting it finish — but it does mean the gate is a strong
+guarantee, not an absolute one. The honest claim is *"the agent cannot finish on a **verified-red**
+app."*
 
 ### Verified, not assumed
 
