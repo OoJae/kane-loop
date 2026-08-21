@@ -56,10 +56,11 @@ and watch the loop close: **RED → failure injected → agent self-corrects →
 *Real run, not a mockup: Kane went RED at 00:44:07, the failure was injected into the agent's
 context, the agent corrected itself, and Kane went GREEN at 00:44:29.*
 
-**Verified on a clean clone.** `git clone` → `./scripts/dev.sh` → all three services live in
-**17 seconds**, then one prompt reproduced the whole loop end to end: two RED iterations, a
-self-correction, GREEN, and the Stop gate releasing — 160 s total, no setup beyond that one
-command.
+**Verified on a clean clone.** `git clone` → `./scripts/dev.sh` → all three services come up, then
+one prompt reproduces the whole loop end to end: RED, a self-correction, GREEN, and the Stop gate
+releasing — with no setup beyond that one command. Committed full-loop timings:
+[`loop-2.timing`](evidence/loop-terminal/loop-2.timing) **173 s** and
+[`loop-3.timing`](evidence/loop-terminal/loop-3.timing) **182 s**, prompt to gate release.
 
 ---
 
@@ -70,10 +71,15 @@ a dark-mode toggle held in React state with **no persistence**, so it resets on 
 
 Kane catches it in a real browser. Measured, from the frozen flow in [`tests/darkmode_test.md`](tests/darkmode_test.md):
 
-| | Exit code | Kane time | Steps |
-|---|---|---|---|
-| **RED** — bug present | `1` | 27 s | 3 passed, 1 failed |
-| **GREEN** — after the fix | `0` | 26 s | 4 / 4 passed |
+| | Exit code | Kane's own clock | Wall clock | Steps |
+|---|---|---|---|---|
+| **RED** — bug present | `1` | 27 s | 34 s | 3 passed, 1 failed |
+| **GREEN** — after the fix | `0` | 26 s | 33 s | 4 / 4 passed |
+
+Two clocks on purpose, because they differ and it looks like a contradiction otherwise: *Kane's own
+clock* is `test_md_summary.duration_s` from the NDJSON, and *wall clock* is the whole
+`kane-cli` process including start-up, recorded in
+[`RED.timing`](evidence/red/RED.timing) / [`GREEN.timing`](evidence/green/GREEN.timing).
 
 Raw NDJSON for both runs is in [`evidence/red/`](evidence/red/) and [`evidence/green/`](evidence/green/).
 A full headless loop transcript is in [`evidence/loop-terminal/`](evidence/loop-terminal/).
@@ -140,9 +146,17 @@ the tool grant is the real fix and is deliberately not being done hours before a
 honest claim is: **the obvious routes are denied, and anything that gets through is detected at the
 gate** — not that tampering is impossible.
 
-This isn't hypothetical. [ImpossibleBench](https://arxiv.org/abs/2510.20270) measured frontier
-models taking exactly this shortcut on **76%** of tasks where the spec and the tests conflict — and
-found that putting the oracle out of reach drops it to near zero.
+This isn't hypothetical. [ImpossibleBench](https://arxiv.org/abs/2510.20270) builds task variants
+where the spec and the tests contradict each other, so any pass is necessarily a spec-violating
+shortcut — and measures how often models take it. GPT-5 cheats on **54%** of Conflicting-SWEbench
+tasks (76% on the one-off variant, 2.9% on the LiveCodeBench equivalent).
+
+The paper is also the reason this project does **read-only** rather than hiding the tests. Hiding
+them "reduces cheating success rate to near zero", but read-only is only *"a middle ground: it
+restores legitimate performance while preventing test modification attempts"* and explicitly
+**"does not eliminate other cheating methods."** Kane Loop keeps the objectives readable on purpose —
+an agent that cannot read the spec cannot satisfy it — and that is exactly why the SHA-256 manifest
+exists as a second layer rather than as belt-and-braces decoration.
 
 Why three hooks? PostToolUse is the fast feedback and the visible moment; Stop is the backstop that
 catches an edit the PostToolUse matcher missed; PreToolUse is what stops the agent from moving the
