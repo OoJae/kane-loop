@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import type { FormEvent, MutableRefObject } from 'react'
 import { ConnectionBadge } from './ConnectionBadge'
 import type { Connection } from '../lib/useSocket'
 
@@ -16,6 +16,13 @@ interface TopBarProps {
   connection: Connection
   demo: boolean
   recorded?: boolean
+  /** Focus lands here when the key bar unmounts, so nobody is stranded on body. */
+  promptRef?: MutableRefObject<HTMLInputElement | null>
+  /** A validated key is held in memory for this page. */
+  keyArmed?: boolean
+  /** Last four characters only — enough to tell one key from another. */
+  keyHint?: string
+  onClearKey?: () => void
 }
 
 export function TopBar({
@@ -30,6 +37,10 @@ export function TopBar({
   connection,
   demo,
   recorded = false,
+  promptRef,
+  keyArmed = false,
+  keyHint = '',
+  onClearKey,
 }: TopBarProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -61,6 +72,7 @@ export function TopBar({
         <form onSubmit={handleSubmit} className="flex min-w-0 flex-1 items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <input
+              ref={promptRef}
               value={value}
               onChange={(event) => onChange(event.target.value)}
               placeholder="add / fix a feature…"
@@ -95,6 +107,30 @@ export function TopBar({
             </button>
           ) : null}
         </form>
+
+        {keyArmed ? (
+          <div
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-line bg-panel-2 px-3 py-2"
+            title="Run is enabled until you reload this page. The key is held in memory and never stored."
+          >
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-mist" aria-hidden />
+            <div className="leading-none">
+              <p className="font-mono text-[10.5px] font-black tracking-[0.14em] text-mist uppercase">
+                run enabled
+              </p>
+              <p className="mt-1 font-mono text-[10px] text-dim">
+                key ····{keyHint}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClearKey}
+              className="shrink-0 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] font-bold text-dim uppercase transition-colors hover:border-dim hover:text-mist"
+            >
+              clear
+            </button>
+          </div>
+        ) : null}
 
         <ConnectionBadge connection={connection} demo={demo} recorded={recorded} />
       </div>

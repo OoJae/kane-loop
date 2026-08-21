@@ -43,8 +43,14 @@ line. ~40 seconds, no setup. The banner says RECORDED, because it is.
 
 The same host runs the loop **live** in the console at
 [/console](https://kane-loop-production.up.railway.app/console/) — the app pane is real and
-interactive. Starting a run needs a key (it spends real Kane credits and executes code in the
-container), so the Run button is inert without one; the key ships with the submission.
+interactive. Starting a run needs a key, because it spends real Kane credits and executes code in
+the container. The console asks for it: paste the key that ships with the submission, it is checked
+against the orchestrator in about a second, and Run goes live.
+
+**The key is never compiled into the page.** It is held in memory for that tab and nothing else —
+no `localStorage`, no `sessionStorage`, no cookie. Open DevTools and search the bundle: there is no
+key in it to find. Reloading asks again, which is the trade for that.
+
 [The root URL](https://kane-loop-production.up.railway.app) is the project's landing page, and
 alongside it:
 
@@ -252,6 +258,14 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
 - **A key-holder on the hosted instance can run code in the container.** The agent is granted
   `Bash(npm:*)` by design, so the run key is effectively an execution key — which is why it is
   gated and handed out deliberately rather than published. The local loop is unaffected.
+  Because the key is supplied at runtime rather than baked into the image, rotating it is a
+  variable change and a restart, not a rebuild.
+- **The live transcript is public on purpose.** Anyone who opens a WebSocket to the host sees the
+  agent's stream: the prompt, its reasoning, its tool calls, and the contents of files it reads.
+  Spectating is a feature here — you should be able to watch a run without holding a key that
+  spends money. Only *acting* is gated: `/run`, `/stop` and `/diag` all require the key. Credentials
+  are stripped from the child process and redacted from anything broadcast, so what is public is
+  the work, not the secrets.
 
 ## Pinned versions
 

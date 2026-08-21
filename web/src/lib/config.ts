@@ -41,15 +41,29 @@ export const WS_URL =
 
 export const RUN_ENDPOINT = `${SERVER_URL}/run`
 export const STOP_ENDPOINT = `${SERVER_URL}/stop`
+/** Tells us whether this instance is gated at all — no key needed to ask. */
+export const HEALTH_ENDPOINT = `${SERVER_URL}/health`
+/**
+ * Behind the same key as /run, but free: no credits, no side effects. That
+ * makes it the right way to check a pasted key before spending anything.
+ */
+export const DIAG_ENDPOINT = `${SERVER_URL}/diag`
 /** The orchestrator serves saved Kane artefacts here. */
 export const EVIDENCE_BASE = `${SERVER_URL}/evidence`
 /** Kane's screenshots live outside the repo, so the orchestrator serves them. */
 export const SHOT_ENDPOINT = `${SERVER_URL}/shot`
 
-/**
- * Key for POST /run on a hosted instance. Baked in at build time so the
- * submitted URL is usable by judges without a login; the point of the gate is to
- * keep a public URL from spending the operator's Anthropic and Kane credits on
- * passers-by, not to keep a secret from the people we handed it to.
+/*
+ * There is deliberately no RUN_KEY export.
+ *
+ * It used to read import.meta.env.VITE_RUN_KEY, which Vite inlines at BUILD
+ * time — inside `docker build`, long before the host injects its variables — so
+ * the shipped bundle always contained the empty string and the Run button could
+ * never authenticate. Supplying it as a build arg would have fixed the symptom
+ * by publishing an execution key in a public bundle.
+ *
+ * The key is now pasted at the point of use and held in memory only. The read is
+ * gone rather than merely unused, so restoring the old behaviour requires
+ * inventing a mechanism instead of connecting two things that already look
+ * wired together.
  */
-export const RUN_KEY = import.meta.env.VITE_RUN_KEY?.trim() || ''

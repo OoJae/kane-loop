@@ -5,10 +5,18 @@ import { TranscriptPane } from './components/TranscriptPane'
 import { VerifierPane } from './components/VerifierPane'
 import { DemoBanner } from './components/DemoBanner'
 import { ReplayBanner } from './components/ReplayBanner'
+import { KeyBar, type KeyState } from './components/KeyBar'
 import { initialState, reducer } from './lib/store'
 import { useSocket } from './lib/useSocket'
 import { useDemo } from './lib/useDemo'
-import { RUN_ENDPOINT, RUN_KEY, SERVER_URL, STOP_ENDPOINT, WS_URL } from './lib/config'
+import {
+  DIAG_ENDPOINT,
+  HEALTH_ENDPOINT,
+  RUN_ENDPOINT,
+  SERVER_URL,
+  STOP_ENDPOINT,
+  WS_URL,
+} from './lib/config'
 import { getDemoScript, type DemoScript } from './lib/demo'
 import { findRecording, loadRecording, type Recording } from './lib/replay'
 import type { NormalisedMessage } from './lib/protocol'
@@ -18,6 +26,17 @@ import type { NormalisedMessage } from './lib/protocol'
  * (the Stop gate blocking "done"). Anything else means live mode.
  */
 const EMPTY_SCRIPT: DemoScript = { name: 'recording', steps: [], marks: [] }
+
+/** Hosted or local? Decides which "can't reach it" advice is actually useful. */
+const LOCAL_SERVER = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(
+  (() => {
+    try {
+      return new URL(SERVER_URL).hostname
+    } catch {
+      return 'localhost'
+    }
+  })(),
+)
 
 function useDemoMode(): { demo: boolean; script: DemoScript; recording: Recording | undefined } {
   return useMemo(() => {
@@ -54,6 +73,46 @@ export default function App() {
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  /**
+   * The run key, in memory only — never localStorage, never sessionStorage.
+   *
+   * This console iframes the app-under-test from the same origin with no
+   * sandbox, and that app is precisely what the agent edits. Anything in web
+   * storage is therefore readable by the code this key authorises; a value
+   * closed over in a hook is not addressable as window.parent.<storage>.
+   * The cost is a re-paste after a reload, which validation makes instant.
+   */
+  const [runKey, setRunKey] = useState('')
+  const [keyRequired, setKeyRequired] = useState(false)
+  const [keyState, setKeyState] = useState<KeyState>('idle')
+  const [retryAfter, setRetryAfter] = useState<number | undefined>(undefined)
+  const [keyFocus, setKeyFocus] = useState(0)
+  const promptInput = useRef<HTMLInputElement | null>(null)
+
+  /**
+   * Ask the orchestrator whether it is gated at all, so the key bar is only ever
+   * shown where it is true. Local dev leaves KANE_RUN_SECRET unset, so this
+   * feature simply does not exist there.
+   *
+   * On a network failure we render nothing and let a later 401 surface it —
+   * never accuse someone of a missing key when the host is merely cold.
+   */
+  useEffect(() => {
+    if (demo) return
+    let cancelled = false
+    fetch(HEALTH_ENDPOINT)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: { keyRequired?: boolean } | null) => {
+        if (!cancelled && body?.keyRequired === true) setKeyRequired(true)
+      })
+      .catch(() => {
+        /* stay silent; a 401 will surface it if it matters */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [demo])
 
   /**
    * A burst of `replay: true` events means the server is re-sending history
@@ -112,9 +171,20 @@ export default function App() {
   }, [state.status])
 
   /* ------------------------------------------------------------- submit */
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (keyOverride?: string) => {
     const text = prompt.trim()
     if (!text || submitting) return
+
+    // Pressing Run with no key is not a dead end and not a disabled button — a
+    // dead disabled control is the bug this whole change exists to fix. Send
+    // nothing (no doomed POST, no 401 in a network tab someone might
+    // screenshot), point at the field that fixes it, and pulse the bar.
+    const key = keyOverride ?? runKey
+    if (keyRequired && key === '') {
+      setKeyState('blocked')
+      setKeyFocus((n) => n + 1)
+      return
+    }
 
     if (demo) {
       setError(
@@ -130,16 +200,26 @@ export default function App() {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          ...(RUN_KEY === '' ? {} : { 'x-kane-key': RUN_KEY }),
+          ...(key === '' ? {} : { 'x-kane-key': key }),
         },
         body: JSON.stringify({ prompt: text }),
       })
 
+      // Handled in the key bar, not the error strip: the strip has nowhere to
+      // put the fix, and two messages for one event is noise.
       if (response.status === 401) {
-        setError(
-          'This hosted instance is key-gated so it cannot be used to spend the ' +
-            'operator\'s API credits. Clone the repo and run it locally — one command.',
-        )
+        setKeyRequired(true)
+        setRunKey('')
+        setKeyState(key === '' ? 'idle' : 'stale')
+        setKeyFocus((n) => n + 1)
+        return
+      }
+
+      if (response.status === 429) {
+        const wait = Number(response.headers.get('retry-after')) || 30
+        setKeyRequired(true)
+        setRetryAfter(wait)
+        setKeyState('limited')
         return
       }
 
@@ -167,18 +247,28 @@ export default function App() {
       setPrompt('')
     } catch {
       setError(
-        `Can't reach the orchestrator at ${SERVER_URL}. Start server/ and try again.`,
+        LOCAL_SERVER
+          ? `Can't reach the orchestrator at ${SERVER_URL}. Start server/ and try again.`
+          : `Can't reach the orchestrator at ${new URL(SERVER_URL).host}. Reload the page and try again.`,
       )
     } finally {
       setSubmitting(false)
     }
-  }, [prompt, submitting, demo])
+    // runKey MUST be here. It used to be a module constant, and a callback that
+    // closes over a stale empty key is exactly the bug being fixed — in a new
+    // place. There is no ESLint in this project to catch it.
+  }, [prompt, submitting, demo, runKey, keyRequired])
 
   /** Ask the orchestrator to abandon the in-flight run (server: POST /stop). */
   const stop = useCallback(async () => {
     if (demo) return
     try {
-      const response = await fetch(STOP_ENDPOINT, { method: 'POST' })
+      const response = await fetch(STOP_ENDPOINT, {
+        method: 'POST',
+        // /stop is gated now: unauthenticated, it was a free way to destroy
+        // evidence mid-run. Whoever started the run holds the key.
+        headers: runKey === '' ? {} : { 'x-kane-key': runKey },
+      })
       if (!response.ok && response.status !== 409) {
         setError(`Orchestrator could not stop the run: ${response.status}`)
         return
@@ -187,7 +277,64 @@ export default function App() {
     } catch {
       setError(`Can't reach the orchestrator at ${SERVER_URL}.`)
     }
-  }, [demo])
+  }, [demo, runKey])
+
+  /**
+   * Validate a pasted key against GET /diag — the same gate as /run, but free:
+   * no credits, no side effects. So a key can be proved good before it is ever
+   * used to spend anything.
+   */
+  const submitKey = useCallback(
+    async (candidate: string) => {
+      const trimmed = candidate.trim()
+      if (trimmed === '') return
+
+      // Only show "checking" if it is actually slow. A 60ms answer that flashes
+      // a spinner reads as jank; once shown, it stays up long enough to read.
+      const shownAt = Date.now()
+      const spinner = window.setTimeout(() => setKeyState('checking'), 120)
+      const settle = (next: KeyState) => {
+        window.clearTimeout(spinner)
+        const shown = Date.now() - shownAt
+        const hold = shown > 120 && shown < 380 ? 380 - shown : 0
+        window.setTimeout(() => setKeyState(next), hold)
+      }
+
+      const abort = new AbortController()
+      const timeout = window.setTimeout(() => abort.abort(), 6000)
+      try {
+        const response = await fetch(DIAG_ENDPOINT, {
+          headers: { 'x-kane-key': trimmed },
+          signal: abort.signal,
+        })
+        if (response.ok) {
+          setRunKey(trimmed)
+          setRetryAfter(undefined)
+          settle('accepted')
+          // Hold the accepted state long enough to read cause and effect on a
+          // screen recording, then stand the bar down.
+          window.setTimeout(() => {
+            setKeyRequired(false)
+            // The bar unmounts with focus inside it; without this, focus falls
+            // to <body> and a keyboard user is stranded mid-page.
+            promptInput.current?.focus()
+          }, 900)
+          return
+        }
+        if (response.status === 429) {
+          setRetryAfter(Number(response.headers.get('retry-after')) || 30)
+          settle('limited')
+          return
+        }
+        settle('rejected')
+      } catch {
+        settle('unreachable')
+      } finally {
+        window.clearTimeout(timeout)
+      }
+    },
+    [],
+  )
 
   return (
     <div className="grid-bg flex h-full min-h-screen flex-col gap-3 bg-ink p-3 xl:h-screen xl:gap-3.5 xl:p-4">
@@ -220,7 +367,27 @@ export default function App() {
         connection={connection}
         demo={demo}
         recorded={recording !== undefined}
+        promptRef={promptInput}
+        keyArmed={runKey !== '' && !demo}
+        keyHint={runKey === '' ? '' : runKey.slice(-4)}
+        onClearKey={() => {
+          setRunKey('')
+          setKeyRequired(true)
+          setKeyState('idle')
+          setKeyFocus((n) => n + 1)
+        }}
       />
+
+      {/* Live mode only, and only where the orchestrator says it is gated —
+          so a local `./scripts/dev.sh` never sees this at all. */}
+      {keyRequired && !demo ? (
+        <KeyBar
+          state={keyState}
+          retryAfter={retryAfter}
+          onSubmit={(candidate) => void submitKey(candidate)}
+          focusToken={keyFocus}
+        />
+      ) : null}
 
       <main className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.14fr)_minmax(0,1.02fr)] xl:grid-rows-[minmax(0,1fr)]">
         <div className="flex min-h-[520px] flex-col xl:min-h-0">
@@ -231,6 +398,7 @@ export default function App() {
             items={state.transcript}
             busy={state.agentBusy}
             alert={state.status === 'RED'}
+            awaitingKey={keyRequired && runKey === '' && !demo}
           />
         </div>
         <div className="flex min-h-[620px] flex-col xl:min-h-0">

@@ -10,13 +10,15 @@ interface TranscriptPaneProps {
   busy: boolean
   /** True while Kane is red, so the pane frame echoes the alarm. */
   alert: boolean
+  /** Gated instance with no key yet — Run cannot start, so do not say "hit Run". */
+  awaitingKey?: boolean
 }
 
 /**
  * Middle pane — the agent's stream-json transcript, with Kane's injected
  * failures rendered inline exactly where the agent received them.
  */
-export function TranscriptPane({ items, busy, alert }: TranscriptPaneProps) {
+export function TranscriptPane({ items, busy, alert, awaitingKey = false }: TranscriptPaneProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const [stuck, setStuck] = useState(true)
   const [unread, setUnread] = useState(0)
@@ -82,7 +84,7 @@ export function TranscriptPane({ items, busy, alert }: TranscriptPaneProps) {
           className="scroll-slim h-full overflow-y-auto px-4 py-4"
         >
           {items.length === 0 ? (
-            <EmptyTranscript />
+            <EmptyTranscript awaitingKey={awaitingKey} />
           ) : (
             <div className="flex flex-col gap-3 pb-2">
               {items.map((item) => (
@@ -106,18 +108,34 @@ export function TranscriptPane({ items, busy, alert }: TranscriptPaneProps) {
   )
 }
 
-function EmptyTranscript() {
+/**
+ * While a gated instance has no key, "hit Run" is an instruction into a wall —
+ * which was the original bug. Say what is actually true instead, and revert
+ * verbatim the moment a key lands, so arming visibly changes the instruction in
+ * the pane the reader is already looking at.
+ */
+function EmptyTranscript({ awaitingKey }: { awaitingKey: boolean }) {
   return (
     <div className="grid h-full place-items-center px-6 text-center">
       <div className="max-w-sm">
         <p className="font-mono text-[11px] font-bold tracking-[0.2em] text-dim uppercase">
-          Waiting for the agent
+          {awaitingKey ? 'Waiting for a key' : 'Waiting for the agent'}
         </p>
         <p className="mt-3 text-[14px] leading-relaxed text-mist">
-          Type a feature request above and hit{' '}
-          <span className="font-semibold text-ice">Run</span>. Claude&rsquo;s edits stream in
-          here — and every time Kane goes red, the failure it found is injected right back
-          into this conversation.
+          {awaitingKey ? (
+            <>
+              Run is gated on this hosted instance. Paste the key from the submission in the bar
+              above, and Claude&rsquo;s edits stream in here — every time Kane goes red, the
+              failure it found is injected right back into this conversation.
+            </>
+          ) : (
+            <>
+              Type a feature request above and hit{' '}
+              <span className="font-semibold text-ice">Run</span>. Claude&rsquo;s edits stream in
+              here — and every time Kane goes red, the failure it found is injected right back
+              into this conversation.
+            </>
+          )}
         </p>
         <div className="mt-5 rounded-xl border border-line-soft bg-panel-2/60 px-3 py-2.5 text-left">
           <p className="font-mono text-[10.5px] font-bold tracking-[0.14em] text-dim uppercase">

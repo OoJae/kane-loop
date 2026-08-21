@@ -16,7 +16,7 @@
  */
 
 import { spawn, type ChildProcessByStdio } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import http from "node:http";
@@ -87,6 +87,93 @@ const HOST = process.env.KANE_HOST ?? "127.0.0.1";
  * Unset locally, so nothing changes for `./scripts/dev.sh`.
  */
 const RUN_SECRET = process.env.KANE_RUN_SECRET ?? "";
+
+/**
+ * Fail closed when this is reachable off-loopback with no secret.
+ *
+ * Binding 0.0.0.0 inside a container is mandatory for a published port and says
+ * nothing about internet exposure, so "not loopback" alone is not the test — a
+ * named opt-out carries the operator's assertion that the bind is private.
+ *
+ * This disables the gated endpoints, it does NOT exit. A crash loop on a host
+ * with restartPolicyMaxRetries would take the landing page, /evidence, /log and
+ * every ?replay= link in the README dark, for a variable that affects one
+ * button. Availability of the demo surface is worth more than a loud failure.
+ */
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1", "localhost"]);
+const ALLOW_UNAUTH_RUN = process.env.KANE_ALLOW_UNAUTHENTICATED_RUN === "1";
+const RUN_DISABLED = RUN_SECRET === "" && !LOOPBACK_HOSTS.has(HOST) && !ALLOW_UNAUTH_RUN;
+
+/**
+ * A fixed, PUBLIC bound. Deliberately not RUN_SECRET.length — that would be the
+ * very length oracle this function exists to remove.
+ */
+const MAX_KEY_CHARS = 512;
+
+/**
+ * Constant-time key comparison.
+ *
+ * timingSafeEqual throws on unequal-length buffers, so both sides are hashed to
+ * a fixed 32 bytes first: the comparison always spans the same byte count and
+ * the secret's length is never observable through a branch. The previous code
+ * short-circuited on `supplied.length !== RUN_SECRET.length`, directly beneath a
+ * comment promising that a mismatch "must not leak length".
+ */
+function keyMatches(supplied: string): boolean {
+  if (RUN_SECRET === "" || supplied.length > MAX_KEY_CHARS) return false;
+  const a = createHash("sha256").update(supplied, "utf8").digest();
+  const b = createHash("sha256").update(RUN_SECRET, "utf8").digest();
+  return timingSafeEqual(a, b);
+}
+
+// --- failed-auth rate limiting -----------------------------------------------
+//
+// Only WRONG keys are counted. A request carrying no key at all is a capability
+// probe (the console asks /health whether this instance is gated), not a guess —
+// counting those would let ordinary page loads burn a legitimate key-holder's
+// budget. Counting only failures also stops an attacker at one address from
+// locking the key-holder at another out of their own instance.
+const FAIL_WINDOW_MS = 15 * 60_000;
+const FAIL_LIMIT = 10;
+const BLOCK_BASE_MS = 30_000;
+const BLOCK_MAX_MS = 15 * 60_000;
+/** Bounded, or the map is itself a memory-growth DoS. */
+const MAX_TRACKED_CLIENTS = 10_000;
+
+interface FailRecord {
+  failures: number;
+  windowStart: number;
+  blocks: number;
+  blockedUntil: number;
+}
+const authFailures = new Map<string, FailRecord>();
+
+/** Seconds remaining on a block, or 0 when the caller is free to try. */
+function blockedSeconds(id: string, now = Date.now()): number {
+  const rec = authFailures.get(id);
+  if (!rec || rec.blockedUntil <= now) return 0;
+  return Math.ceil((rec.blockedUntil - now) / 1000);
+}
+
+function recordAuthFailure(id: string, now = Date.now()): void {
+  if (authFailures.size >= MAX_TRACKED_CLIENTS && !authFailures.has(id)) authFailures.clear();
+  const rec = authFailures.get(id) ?? { failures: 0, windowStart: now, blocks: 0, blockedUntil: 0 };
+  if (now - rec.windowStart > FAIL_WINDOW_MS) {
+    rec.failures = 0;
+    rec.windowStart = now;
+  }
+  rec.failures += 1;
+  if (rec.failures >= FAIL_LIMIT) {
+    rec.blocks += 1;
+    rec.blockedUntil = now + Math.min(BLOCK_BASE_MS * 2 ** (rec.blocks - 1), BLOCK_MAX_MS);
+    rec.failures = 0;
+    rec.windowStart = now;
+    console.warn(
+      `[auth] ${id} blocked for ${Math.round((rec.blockedUntil - now) / 1000)}s after ${FAIL_LIMIT} bad keys`,
+    );
+  }
+  authFailures.set(id, rec);
+}
 /** Built UI (web/dist), served by this process so one host serves everything. */
 const WEB_DIST = process.env.KANE_WEB_DIST ?? path.join(ROOT, "web", "dist");
 const SITE_DIST = process.env.KANE_SITE_DIST ?? path.join(ROOT, "site", "dist");
@@ -287,6 +374,30 @@ async function readReplayLines(): Promise<JsonValue[]> {
 
 let activeRun: ActiveRun | null = null;
 
+/**
+ * Values that must never leave this process.
+ *
+ * The live transcript is public by design — spectating is a feature here — but
+ * "anyone may watch" is not "anyone may collect credentials". The agent's raw
+ * stderr is forwarded verbatim, and one stack trace or `npm config` dump that
+ * echoes the environment would publish a provider token to every listener.
+ * Built once at startup; short values are ignored because a two-character
+ * secret would redact half the transcript.
+ */
+const SECRETS: string[] = [
+  process.env.KANE_RUN_SECRET,
+  process.env.ANTHROPIC_AUTH_TOKEN,
+  process.env.ANTHROPIC_API_KEY,
+  process.env.KANE_ACCESS_KEY,
+].filter((v): v is string => typeof v === "string" && v.length >= 8);
+
+/** Replace any known secret with a marker, preserving the surrounding text. */
+function redact(text: string): string {
+  let out = text;
+  for (const secret of SECRETS) out = out.split(secret).join("[redacted]");
+  return out;
+}
+
 function agentEvent(event: JsonValue): void {
   broadcast({ channel: "agent", event });
 }
@@ -311,9 +422,22 @@ function startRun(prompt: string): ActiveRun {
     prompt,
   ];
 
+  // The agent holds Write plus Bash(npm:*), and `npm run <script>` executes
+  // whatever package.json says — a file it can write. Treat it as having a
+  // shell: anything in its environment is exfiltratable. The run key above all,
+  // since stealing that turns one abusive run into permanent access.
+  //
+  // KANE_ACCESS_KEY/KANE_USERNAME go too: scripts/serve.sh runs `kane-cli login`
+  // at boot and the hooks use the stored session — .claude/hooks/* read only
+  // KANE_TARGET_URL, KANE_FLOW_GLOB and KANE_RUN_TIMEOUT.
+  const childEnv = { ...process.env };
+  delete childEnv["KANE_RUN_SECRET"];
+  delete childEnv["KANE_ACCESS_KEY"];
+  delete childEnv["KANE_USERNAME"];
+
   const child: AgentProcess = spawn(CLAUDE_BIN, args, {
     cwd: TARGET_APP_DIR,
-    env: process.env,
+    env: childEnv,
     stdio: ["ignore", "pipe", "pipe"],
   });
 
@@ -348,7 +472,7 @@ function startRun(prompt: string): ActiveRun {
     for (const line of lines) {
       if (!line.trim()) continue;
       console.error(`[run ${run.id}] stderr: ${line}`);
-      agentEvent({ type: "stderr", text: line });
+      agentEvent({ type: "stderr", text: redact(line) });
     }
   });
 
@@ -374,7 +498,7 @@ function startRun(prompt: string): ActiveRun {
     if (stdoutBuffer.trim()) emitAgentLine(stdoutBuffer);
     stdoutBuffer = "";
     stderrBuffer += stderrDecoder.end();
-    if (stderrBuffer.trim()) agentEvent({ type: "stderr", text: stderrBuffer });
+    if (stderrBuffer.trim()) agentEvent({ type: "stderr", text: redact(stderrBuffer) });
     stderrBuffer = "";
 
     emitExit(code, signal);
@@ -389,7 +513,7 @@ function emitAgentLine(line: string): void {
   const event = parseJson(trimmed);
   if (event === undefined) {
     // Not stream-json (a banner, a warning). Forward it rather than lose it.
-    agentEvent({ type: "stdout_raw", text: trimmed });
+    agentEvent({ type: "stdout_raw", text: redact(trimmed) });
     return;
   }
   agentEvent(event);
@@ -412,6 +536,61 @@ function stopRun(): { stopped: boolean; runId: string | null } {
 // --- http --------------------------------------------------------------------
 
 const app = express();
+
+// Exactly one hop, and only behind a known proxy. `true` would trust a
+// client-supplied X-Forwarded-For, letting an attacker mint a fresh rate-limit
+// bucket per request — that does not weaken the limiter, it deletes it. Enabling
+// it with no proxy in front is worse than nothing for the same reason.
+if (process.env.RAILWAY_PUBLIC_DOMAIN || process.env.KANE_TRUST_PROXY === "1") {
+  app.set("trust proxy", 1);
+}
+
+/**
+ * The one gate. /run, /diag and /stop share it so they cannot drift apart —
+ * before this, /run and /diag returned different 401 bodies for the same
+ * condition, which told an attacker which endpoint they had reached.
+ *
+ * Every branch is a no-op when RUN_SECRET is unset, so `./scripts/dev.sh` is
+ * completely unaffected.
+ */
+function requireKey(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  if (RUN_DISABLED) {
+    res.status(503).json({
+      ok: false,
+      error:
+        "This endpoint is disabled: the server is reachable off-loopback with no KANE_RUN_SECRET set. " +
+        "Set one, or set KANE_ALLOW_UNAUTHENTICATED_RUN=1 if this bind really is private.",
+    });
+    return;
+  }
+  if (RUN_SECRET === "") {
+    next();
+    return;
+  }
+
+  const id = req.ip ?? "unknown";
+  const wait = blockedSeconds(id);
+  if (wait > 0) {
+    res.setHeader("Retry-After", String(wait));
+    res.status(429).json({ ok: false, error: `too many bad keys — retry in ${wait}s` });
+    return;
+  }
+
+  const supplied = req.get("x-kane-key") ?? "";
+  if (keyMatches(supplied)) {
+    next();
+    return;
+  }
+
+  // Only a WRONG key counts against the limit. No key at all is a probe.
+  if (supplied !== "") recordAuthFailure(id);
+  res.status(401).json({
+    ok: false,
+    error:
+      "This instance requires a key. Kane Loop runs locally with one command — see the repo — " +
+      "or use the key supplied with the submission.",
+  });
+}
 
 // POST /run spawns a coding agent with --permission-mode acceptEdits on this
 // machine, so the origin check is a security boundary, not a formality:
@@ -450,7 +629,9 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.json({ limit: "1mb" }));
+// 64kb, not 1mb: a prompt is text, and this body is parsed before the key is
+// ever checked.
+app.use(express.json({ limit: "64kb" }));
 
 // redirect:false matters: express.static answers a bare directory with a 301 to
 // its trailing-slash form, which meant `/evidence` — the landing site's receipts
@@ -462,46 +643,39 @@ app.use(
   express.static(EVIDENCE_DIR, { fallthrough: true, index: false, redirect: false }),
 );
 
+/**
+ * Public, unauthenticated — it is the platform healthcheck, so it must stay
+ * reachable. Everything it used to report about the container (port, binary
+ * path, directory names, client count) was fingerprinting with no consumer:
+ * nothing in web/ ever read this. `run.prompt` was worse — arbitrary
+ * key-holder-authored text on a public endpoint.
+ *
+ * `keyRequired` is safe to publish and saves the console from inferring the
+ * answer from a build-time env var, which is the exact class of bug that made
+ * the Run button unusable. It reveals nothing a single request would not:
+ * POST /run with {} already answers it, since auth runs before body validation.
+ */
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
-    port: PORT,
     running: activeRun !== null,
-    run: activeRun
-      ? { id: activeRun.id, prompt: activeRun.prompt, startedAt: activeRun.startedAt }
-      : null,
-    clients: clients.size,
     uptime: process.uptime(),
-    // Basenames only. /health used to return absolute paths, which put the
-    // developer's home directory into every screenshot of the endpoint.
-    root: path.basename(ROOT),
-    targetApp: path.basename(TARGET_APP_DIR),
-    evidenceDir: path.basename(EVIDENCE_DIR),
-    claudeBin: CLAUDE_BIN,
+    keyRequired: RUN_SECRET !== "",
+    runDisabled: RUN_DISABLED,
     events: {
-      file: EVENTS_FILE,
+      // basename: the comment this replaces claimed absolute paths had been
+      // stripped, but this one was missed and still leaked the container path.
+      file: path.basename(EVENTS_FILE),
       exists: fs.existsSync(EVENTS_FILE),
       offset,
     },
   });
 });
 
-app.post("/run", (req, res) => {
-  // Gate the only endpoint that spends money. Constant-time-ish compare is
-  // overkill for a demo secret, but a plain mismatch must not leak length.
-  if (RUN_SECRET !== "") {
-    const supplied = req.get("x-kane-key") ?? "";
-    if (supplied.length !== RUN_SECRET.length || supplied !== RUN_SECRET) {
-      res.status(401).json({
-        ok: false,
-        error:
-          "This instance requires a key. Kane Loop runs locally with one command — see the repo — " +
-          "or use the key supplied with the submission.",
-      });
-      return;
-    }
-  }
-
+// The only endpoint that spends money: it starts an agent on the operator's
+// model credits, burns Kane credits, and edits files. requireKey covers the
+// comparison, the rate limit and the off-loopback fail-closed.
+app.post("/run", requireKey, (req, res) => {
   const body: unknown = req.body;
   const prompt =
     typeof body === "object" && body !== null && "prompt" in body
@@ -547,11 +721,10 @@ app.post("/run", (req, res) => {
  * shell for the operator, and "exit 2, see .kane-stderr.log" is useless advice
  * when the file is inside a container you cannot open.
  */
-app.get("/diag", (req, res) => {
-  if (RUN_SECRET !== "" && (req.get("x-kane-key") ?? "") !== RUN_SECRET) {
-    res.status(401).json({ ok: false, error: "key required" });
-    return;
-  }
+// Also the console's key validator: it is the same gate as /run, but free —
+// no credits, no side effects — so a pasted key can be checked before it is
+// ever used to start a run.
+app.get("/diag", requireKey, (_req, res) => {
   const file = path.join(ROOT, ".kane-stderr.log");
   let stderrTail = "";
   try {
@@ -572,7 +745,16 @@ app.get("/diag", (req, res) => {
  * public deployment: resolve it, then require it to sit inside one of two
  * roots, and serve only image files.
  */
-const SHOT_ROOTS = [path.join(os.homedir(), ".testmuai"), EVIDENCE_DIR];
+// Resolved through symlinks at startup, so containment is compared like for
+// like — on macOS /var is itself a symlink to /private/var, which would
+// otherwise make a legitimate path look like an escape.
+const SHOT_ROOTS = [path.join(os.homedir(), ".testmuai"), EVIDENCE_DIR].map((root) => {
+  try {
+    return fs.realpathSync(root);
+  } catch {
+    return root;
+  }
+});
 
 app.get("/shot", (req, res) => {
   const raw = typeof req.query["p"] === "string" ? req.query["p"] : "";
@@ -581,7 +763,18 @@ app.get("/shot", (req, res) => {
     return;
   }
 
-  const resolved = path.resolve(raw);
+  // Resolve symlinks before judging. path.resolve alone only neutralises "..",
+  // and once the agent is running it can create links: `ln -s /etc/passwd
+  // ~/.testmuai/x.png` passes both a prefix check and an extension test done on
+  // the link's own name. Both tests below run on the real target.
+  let resolved: string;
+  try {
+    resolved = fs.realpathSync(path.resolve(raw));
+  } catch {
+    res.status(404).json({ ok: false, error: "no such screenshot" });
+    return;
+  }
+
   const inside = SHOT_ROOTS.some(
     (root) => resolved === root || resolved.startsWith(root + path.sep),
   );
@@ -593,17 +786,17 @@ app.get("/shot", (req, res) => {
     res.status(403).json({ ok: false, error: "not an image" });
     return;
   }
-  if (!fs.existsSync(resolved)) {
-    res.status(404).json({ ok: false, error: "no such screenshot" });
-    return;
-  }
 
   // Immutable: a given run's screenshot never changes once written.
   res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
   res.sendFile(resolved);
 });
 
-app.post("/stop", (_req, res) => {
+// Gated. Unauthenticated, this was a free and unlimited way to destroy evidence
+// mid-run, leave target-app/src half-written with no verdict, and guarantee the
+// hosted demo never closes a loop. Scoping by runId instead was rejected: the id
+// is broadcast to every WebSocket client, so it is not a secret.
+app.post("/stop", requireKey, (_req, res) => {
   const result = stopRun();
   res.json({ ok: true, ...result });
 });
@@ -725,6 +918,32 @@ if (fs.existsSync(SITE_DIST)) {
   });
 }
 
+/**
+ * Registered last, so it sits below every route including the SPA fallbacks.
+ *
+ * Without it, a malformed body or an oversized one falls through to Express's
+ * default handler and returns an HTML page — which the console now parses as
+ * JSON on its 401 and 429 paths. Arity 4 is what marks this as an error
+ * handler, so `_next` has to stay in the signature even though it is unused.
+ */
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ): void => {
+    const status =
+      typeof (err as { status?: number } | null)?.status === "number"
+        ? (err as { status: number }).status
+        : 400;
+    console.error("[http]", err);
+    res
+      .status(status)
+      .json({ ok: false, error: status === 413 ? "body too large" : "malformed request" });
+  },
+);
+
 server.listen(PORT, HOST, () => {
   startTailer();
   console.log("");
@@ -735,6 +954,25 @@ server.listen(PORT, HOST, () => {
   console.log(`  Evidence served at  http://localhost:${PORT}/evidence  (${EVIDENCE_DIR})`);
   console.log(`  Claude binary       ${CLAUDE_BIN}`);
   console.log(`  CORS                restricted to ${[...ALLOWED_ORIGINS].join(", ")}`);
+
+  // Say plainly which of the three postures this process is in. The dangerous
+  // one used to be silent.
+  if (RUN_DISABLED) {
+    console.log(
+      "  \x1b[1;31m/run, /stop and /diag are DISABLED\x1b[0m — bound to " +
+        `${HOST} with no KANE_RUN_SECRET. Set one, or KANE_ALLOW_UNAUTHENTICATED_RUN=1.`,
+    );
+  } else if (RUN_SECRET === "") {
+    console.log("  Run gate            open (no KANE_RUN_SECRET; loopback only)");
+  } else {
+    console.log("  Run gate            key required");
+    if (RUN_SECRET.length < 24) {
+      console.log(
+        "  \x1b[1;33m!\x1b[0m KANE_RUN_SECRET is short. Rate limiting only buys time —" +
+          " entropy is what makes guessing infeasible. Try: openssl rand -base64 32",
+      );
+    }
+  }
   console.log("");
 });
 
