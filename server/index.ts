@@ -603,7 +603,14 @@ const TARGET_ORIGIN = process.env.KANE_TARGET_URL ?? "http://127.0.0.1:5173";
 // app's HTML requests ROOT-absolute (/@vite/client, /src/main.tsx): served from
 // this origin they hit the SPA fallback and the iframe renders blank white.
 // None of them collide with the built UI, which lives under /assets.
-app.use("/app", createProxyMiddleware({ target: TARGET_ORIGIN, changeOrigin: true, ws: true }));
+// ws is OFF on both proxies, and that is load-bearing. With ws:true they attach
+// greedy `upgrade` handlers to this same HTTP server, so the UI's OWN WebSocket
+// got piped into Vite, which died on the unrecognised frames:
+//   RangeError: Invalid WebSocket frame: invalid status code 26274
+// taking the whole target app down with it. The cost is no hot-reload inside the
+// iframe on the hosted instance — which costs nothing here, because the Kane
+// flow reloads the page itself and the pane has a Reload button.
+app.use("/app", createProxyMiddleware({ target: TARGET_ORIGIN, changeOrigin: true, ws: false }));
 
 // An explicit prefix test rather than pathFilter globs: those silently failed to
 // match, so every module request fell through to the SPA fallback and the
@@ -614,7 +621,7 @@ const VITE_PREFIXES = ["/@vite", "/@react-refresh", "/@fs", "/@id", "/src/", "/n
 const viteAssetProxy = createProxyMiddleware({
   target: TARGET_ORIGIN,
   changeOrigin: true,
-  ws: true,
+  ws: false,
 });
 app.use((req, res, next) => {
   if (VITE_PREFIXES.some((prefix) => req.url.startsWith(prefix))) {
