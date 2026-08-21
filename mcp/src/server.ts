@@ -10,7 +10,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { parseKaneNdjson, type KaneVerdict } from "./parse.js";
@@ -160,7 +160,15 @@ server.registerTool(
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
   async ({ dir }) => {
-    const base = dir === undefined ? join(PROJECT_ROOT, "tests") : isAbsolute(dir) ? dir : join(PROJECT_ROOT, dir);
+    // `dir` arrives from whatever agent is driving this server, so it is
+    // untrusted input. Without this it would happily enumerate any directory on
+    // the machine that happens to contain *_test.md files.
+    const base = resolve(
+      dir === undefined ? join(PROJECT_ROOT, "tests") : isAbsolute(dir) ? dir : join(PROJECT_ROOT, dir),
+    );
+    if (base !== PROJECT_ROOT && !base.startsWith(PROJECT_ROOT + sep)) {
+      return fail("dir must be inside the project root.");
+    }
     if (!existsSync(base)) return fail(`No such directory: ${base}`);
 
     const flows = readdirSync(base)

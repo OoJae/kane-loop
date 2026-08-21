@@ -107,7 +107,11 @@ export function parseKaneNdjson(stdout: string, exitCode: number | null): KaneVe
       ? overall === "passed" ? "passed" : "failed"
       : str(chosen?.["status"]) === "passed" ? "passed" : "failed";
 
-  let status = fromExit(exitCode) ?? dataStatus;
+  // exitCode === null means the process was killed by a signal, so there is no
+  // verdict to trust. Falling through to the data is only safe when the run
+  // actually reached a file-level summary; a stream cut off mid-run whose last
+  // per-step run_end happened to pass would otherwise be reported as "passed".
+  let status = fromExit(exitCode) ?? (overall !== "" ? dataStatus : "error");
   // A non-passing overall_status or per-step run_end outranks a zero exit code.
   if (status === "passed" && dataStatus !== "passed") status = "failed";
   if (status === "passed" && chosen !== undefined && str(chosen["status"]) !== "passed") status = "failed";

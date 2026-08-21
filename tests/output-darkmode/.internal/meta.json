@@ -286,6 +286,20 @@
       "status": "passed",
       "valid": true,
       "at": "2026-08-21T07:45:06.952Z"
+    },
+    {
+      "execution_id": "93f79ad3-4e68-415f-93fe-436fcc18af53",
+      "run_kind": "replay",
+      "status": "broken",
+      "valid": true,
+      "at": "2026-08-21T07:50:31.289Z"
+    },
+    {
+      "execution_id": "9343ffb0-8f30-4eca-b955-b6a7c61fe730",
+      "run_kind": "replay",
+      "status": "broken",
+      "valid": true,
+      "at": "2026-08-21T07:52:07.082Z"
     }
   ]
 }

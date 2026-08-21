@@ -19,6 +19,9 @@ die() { printf '\033[1;31m✗ %s\033[0m\n' "$1" >&2; exit 1; }
 # error — the worst possible failure because it looks like nothing is wrong.
 command -v jq >/dev/null 2>&1 || die "jq is required by the Kane hooks (brew install jq)"
 command -v node >/dev/null 2>&1 || die "node is required"
+# The one binary the entire demo depends on, and the only one that was unchecked.
+command -v claude >/dev/null 2>&1 || \
+  warn "claude CLI not found — POST /run will fail (npm i -g @anthropic-ai/claude-code)"
 
 if command -v kane-cli >/dev/null 2>&1; then
   # whoami is free. An expired token makes every run fail as if the app were
@@ -85,11 +88,20 @@ wait_for() { # wait_for <url> <label>
   return 1
 }
 
-wait_for "http://localhost:$APP_PORT" "target app"
-[ -f "$ROOT/server/package.json" ] && wait_for "http://localhost:$SERVER_PORT/health" "orchestrator"
-[ -f "$ROOT/web/package.json" ]    && wait_for "http://localhost:$WEB_PORT" "Kane Loop UI"
+# Track whether everything actually came up. This used to print "Kane Loop is up"
+# unconditionally — wait_for only warned — so a judge whose orchestrator failed to
+# start still got a confident success banner and then a dead UI.
+READY=1
+wait_for "http://localhost:$APP_PORT" "target app" || READY=0
+if [ -f "$ROOT/server/package.json" ]; then
+  wait_for "http://localhost:$SERVER_PORT/health" "orchestrator" || READY=0
+fi
+if [ -f "$ROOT/web/package.json" ]; then
+  wait_for "http://localhost:$WEB_PORT" "Kane Loop UI" || READY=0
+fi
 
-cat <<EOF
+if [ "$READY" -eq 1 ]; then
+  cat <<EOF
 
   ┌────────────────────────────────────────────┐
   │  Kane Loop is up                           │
@@ -102,5 +114,9 @@ cat <<EOF
   Ctrl-C to stop everything.
 
 EOF
+else
+  printf '\033[1;31m✗ one or more services did not come up — see the log above.\033[0m\n' >&2
+  printf '  The loop will not close until all three are running.\n\n' >&2
+fi
 
 wait

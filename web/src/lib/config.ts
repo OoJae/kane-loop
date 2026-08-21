@@ -23,6 +23,5 @@ export const WS_URL =
 
 export const RUN_ENDPOINT = `${SERVER_URL}/run`
 export const STOP_ENDPOINT = `${SERVER_URL}/stop`
-export const HEALTH_ENDPOINT = `${SERVER_URL}/health`
 /** The orchestrator serves saved Kane artefacts here. */
 export const EVIDENCE_BASE = `${SERVER_URL}/evidence`

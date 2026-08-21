@@ -204,6 +204,15 @@ const AGENT_TYPES = new Set([
   'hook_started',
   'hook_response',
   'stream_event',
+  // Real Anthropic API events and the orchestrator's own lifecycle messages.
+  // Without these they fall through to the Kane channel and get dumped into the
+  // raw receipts feed instead of being handled.
+  'rate_limit_event',
+  'process_start',
+  'process_exit',
+  'process_error',
+  'stderr',
+  'stdout_raw',
 ])
 
 const LOOP_TYPES = new Set([

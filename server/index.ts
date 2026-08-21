@@ -438,9 +438,11 @@ app.get("/health", (_req, res) => {
       : null,
     clients: clients.size,
     uptime: process.uptime(),
-    root: ROOT,
-    targetApp: TARGET_APP_DIR,
-    evidenceDir: EVIDENCE_DIR,
+    // Basenames only. /health used to return absolute paths, which put the
+    // developer's home directory into every screenshot of the endpoint.
+    root: path.basename(ROOT),
+    targetApp: path.basename(TARGET_APP_DIR),
+    evidenceDir: path.basename(EVIDENCE_DIR),
     claudeBin: CLAUDE_BIN,
     events: {
       file: EVENTS_FILE,
@@ -544,7 +546,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  Agent cwd           ${TARGET_APP_DIR}`);
   console.log(`  Evidence served at  http://localhost:${PORT}/evidence  (${EVIDENCE_DIR})`);
   console.log(`  Claude binary       ${CLAUDE_BIN}`);
-  console.log(`  CORS                permissive (UI expected at ${UI_ORIGIN})`);
+  console.log(`  CORS                restricted to ${[...ALLOWED_ORIGINS].join(", ")}`);
   console.log("");
 });
 

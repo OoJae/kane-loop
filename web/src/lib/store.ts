@@ -621,6 +621,54 @@ function applyAgentEvent(
       replay,
       text: 'Claude Code session started in target-app/',
     })
+    return
+  }
+
+  // The orchestrator's own lifecycle events. Without these the UI never learns
+  // the agent died: if `claude` is not on PATH the server still returns 202, the
+  // prompt sets agentBusy, and the pane says "working" forever with no error.
+  if (type === 'process_error') {
+    draft.agentBusy = false
+    pushTranscript(draft, {
+      kind: 'notice',
+      id: nextId(draft),
+      ts: at,
+      replay,
+      text:
+        typeof event.message === 'string'
+          ? `The agent could not be started: ${event.message}`
+          : 'The agent could not be started. Is the claude CLI on PATH?',
+    })
+    return
+  }
+
+  if (type === 'process_exit') {
+    draft.agentBusy = false
+    const code = typeof event.code === 'number' ? event.code : null
+    const signal = typeof event.signal === 'string' ? event.signal : null
+    if (code !== 0 || signal !== null) {
+      pushTranscript(draft, {
+        kind: 'notice',
+        id: nextId(draft),
+        ts: at,
+        replay,
+        text: signal !== null
+          ? `The agent was stopped (${signal}).`
+          : `The agent exited with code ${String(code)}.`,
+      })
+    }
+    return
+  }
+
+  // Real, and previously dropped in silence — it appears in the captured runs.
+  if (type === 'rate_limit_event') {
+    pushTranscript(draft, {
+      kind: 'notice',
+      id: nextId(draft),
+      ts: at,
+      replay,
+      text: 'Rate limited by the Anthropic API — the agent is waiting, not stuck.',
+    })
   }
 }
 
