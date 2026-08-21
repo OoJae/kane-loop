@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="klt">
+  <title id="klt">Kane Loop</title>
+  <!--
+    A loop that has come round and moved on: the stroke starts red on the outside,
+    travels once, and closes green on a tighter radius, so the ends PASS instead of
+    meeting. Not a ring (static) and not a spinner (endless) — an iteration.
+
+    No gradient between the two: a verdict has no in-between, the way an exit code
+    doesn't. Red stops, green starts.
+
+    No knockout shapes and no background fill, so it drops onto any surface.
+  -->
+  <g fill="none" stroke-width="7" stroke-linecap="round">
+    <path d="M 32 6 A 26 26 0 0 1 32 58" stroke="#ff3b52"/>
+    <path d="M 32 58 A 22 22 0 0 1 32 14" stroke="#34e39b"/>
+  </g>
+</svg>

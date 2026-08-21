@@ -1,0 +1,138 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ theme */
+/* Every value here already existed in web/src/index.css or target-app's
+   palette. The brand was in the product before it was written down; this only
+   names it. See public/brand/brand.md. */
+
+@theme {
+  --color-ink: #08090c;
+  --color-ink-2: #0b0d11;
+  --color-paper: #f4f5f7;
+  --color-paper-ink: #14161a;
+  --color-ice: #f3f5f8;
+  --color-dim: #6b7585;
+  --color-line: #242a34;
+  --color-fail: #ff3b52;
+  --color-pass: #34e39b;
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-body: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-flip: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ink);
+  color: var(--color-ice);
+  font-family: var(--font-body);
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* The field is a state, not a constant: it travels as the verdict does. */
+body[data-phase='bug'] {
+  background: var(--color-paper);
+  color: var(--color-paper-ink);
+}
+/* --dim on --paper is ~4.0:1 — under the floor for small text, and the labels
+   are small. Darken them for the light phase only. */
+body[data-phase='bug'] .label { color: #5c6470; }
+
+/* ------------------------------------------------------------------ type */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  /* font-stretch alone did not move the wdth axis in Chrome for this face, so
+     drive the axis directly. Expanded is the whole point of the display voice. */
+  font-variation-settings: 'wdth' 125, 'wght' 800;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+
+/* Anything the machine said. If a human wrote it, it is Archivo. */
+.data { font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.5; }
+
+/* --------------------------------------------------------------- a11y */
+
+:focus-visible {
+  outline: 2px solid var(--color-pass);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-ink);
+  color: var(--color-ice);
+  padding: 0.75rem 1rem;
+  z-index: 100;
+}
+.skip:focus { left: 0; }
+
+/* The pane's 3D tilt. On a narrow screen a rotated card just costs legibility
+   for an effect nobody can see, so it flattens to straight-on. */
+.pane3d { transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)) translateZ(0); }
+@media (max-width: 1023px) {
+  .pane3d { transform: none; }
+}
+
+/* Grain: a whisper of film so the flat blacks aren't plastic. */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------- motion */
+/* Two keyframes, both tied to meaning: a beat arriving, and a verdict landing. */
+
+@keyframes beatIn {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* A verdict is an event, so it overshoots and settles rather than fading in. */
+@keyframes stamp {
+  0%   { opacity: 0; transform: scale(1.14); }
+  60%  { opacity: 1; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}

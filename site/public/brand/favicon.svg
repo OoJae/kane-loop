@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kane Loop">
+  <!-- 16px variant: heavier stroke and a wider pass, because at tab size the
+       overlap in mark.svg closes up and the gesture is lost. -->
+  <g fill="none" stroke-width="10" stroke-linecap="round">
+    <path d="M 32 8 A 24 24 0 0 1 32 56" stroke="#ff3b52"/>
+    <path d="M 32 56 A 19 19 0 0 1 32 18" stroke="#34e39b"/>
+  </g>
+</svg>

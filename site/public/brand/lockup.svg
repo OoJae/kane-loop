@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 64" role="img" aria-label="Kane Loop">
+  <!-- Horizontal lockup. Text is live so it inherits Archivo where the family is
+       loaded; the mark alone is the fallback anywhere it is not. -->
+  <g fill="none" stroke-width="7" stroke-linecap="round">
+    <path d="M 32 6 A 26 26 0 0 1 32 58" stroke="#ff3b52"/>
+    <path d="M 32 58 A 22 22 0 0 1 32 14" stroke="#34e39b"/>
+  </g>
+  <text x="78" y="43"
+        font-family="Archivo, 'Archivo Expanded', system-ui, sans-serif"
+        font-size="30" font-weight="800" font-stretch="expanded"
+        letter-spacing="-0.5" fill="#f3f5f8">KANE LOOP</text>
+</svg>
