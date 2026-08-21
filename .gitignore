@@ -33,3 +33,6 @@ DEMO-AND-SUBMISSION.md
 
 # oracle seal — per-session state, not a committed artifact
 .kane-oracle.sha256
+
+# demo film: capture, composition and renders — local build artifacts
+demo/
