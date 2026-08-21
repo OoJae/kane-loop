@@ -23,6 +23,10 @@ mv "$SRC/formvalidation_test.md" "$DST/"
 [ -d "$SRC/output-formvalidation" ] && mv "$SRC/output-formvalidation" "$DST/"
 chmod -w "$DST/formvalidation_test.md"
 
+# Staging a flow legitimately changes the oracle set, so the old seal is now
+# stale. Drop it; the next verified save re-seals over the new, correct set.
+rm -f "$ROOT/.kane-oracle.sha256"
+
 echo "✓ staged: tests/formvalidation_test.md (cached, read-only)"
 echo
 echo "  The hooks now run BOTH flows. Ask the agent for the feature, e.g."

@@ -19,7 +19,9 @@ export type KanePhase = 'verify' | 'gate'
 export type FlowStatus = 'passed' | 'failed' | 'error'
 
 /** `verify_result.status` / `gate_result.status`. */
-export type LoopStatus = 'red' | 'green' | 'unverified'
+/** `verify_result.status` / `gate_result.status`. `tampered` is gate-only: the
+ *  oracle checksum moved during the session, so a pass is not evidence. */
+export type LoopStatus = 'red' | 'green' | 'unverified' | 'tampered'
 
 interface LoopEventBase {
   source: 'kane-loop'

@@ -366,7 +366,13 @@ function applyLoopEvent(
         loop: draft.loop,
         replay,
       })
-      if (status === 'red') {
+      // Only an explicit green is green. The gate also emits `tampered`, and
+      // testing `=== 'red'` here treated that as success — a 94px GREEN banner
+      // reading "Proven in a real browser" at the exact moment the gate caught
+      // the oracle being altered. Anything that is not a pass blocks.
+      if (status === 'green') {
+        setStatus(draft, 'GREEN', at)
+      } else {
         setStatus(draft, 'RED', at)
         pushTranscript(draft, {
           kind: 'injection',
@@ -375,12 +381,13 @@ function applyLoopEvent(
           replay,
           phase: 'gate',
           detail:
-            present(event.detail) ?? 'The Stop gate blocked completion: Kane is red.',
+            present(event.detail) ??
+            (status === 'tampered'
+              ? 'The Stop gate blocked completion: the test oracle changed during this session.'
+              : 'The Stop gate blocked completion: Kane is red.'),
           loop: draft.loop,
           blocks: toBool(event.blocks, true),
         })
-      } else {
-        setStatus(draft, 'GREEN', at)
       }
       break
     }

@@ -36,6 +36,15 @@ echo "→ clearing loop state"
 : >"$ROOT/.kane-events.ndjson"
 rm -rf "$ROOT/.kane.lock"
 rm -f "$ROOT/.kane-failcount" "$ROOT/.kane-stderr.log"
+# The integrity seal MUST go too. kane-verify.sh only seals when the file is
+# absent, so a seal left over from a previous demo is never refreshed — and the
+# moment anything legitimately changes the set of files under tests/ (staging
+# the second flow, restoring a test), every subsequent green is blocked as
+# "tampered" at exactly the moment of victory.
+rm -f "$ROOT/.kane-oracle.sha256"
+
+# Restore the oracle itself, in case a rehearsal left it modified.
+git checkout -- "$ROOT/tests" 2>/dev/null || true
 
 # Tests are immutable ground truth to the demo agent. Re-assert that after any
 # rehearsal, in case a run left them writable.

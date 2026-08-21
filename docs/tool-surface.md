@@ -100,7 +100,7 @@ into the agent would send it debugging the test instead of the app. The hook now
 leads the injected message with the **literal failed assertion** taken from the
 failing `step_end` (`assert: …`), plus the step heading. Result:
 
-> `[darkmode_test.md] step "Verify dark mode survived" failed — failed assertion: "the page background is dark" (Checkpoint assertion failed: "the page background is dark")`
+> `[darkmode_test.md] step "Verify dark mode survived" failed — failed assertion: "the page background is still dark" (assertion_failed: @ step 2)`
 
 **4. Reload and assertion must be SEPARATE testmd steps.** ← the important one
 A single step saying *"Reload the page. Assert the background is still dark"*
@@ -249,46 +249,20 @@ gate_result  status=green         gate released
 The RED is honest: after the first edit the app *read* the stored theme but never
 *wrote* it, so nothing persisted and Kane caught it.
 
-### Negative test — the gate really blocks
+### Negative test — the gate really blocks, four times
 
-With the bug present, the agent was asked to do something trivial and stop:
-
-```
-gate_start
-flow_end     status=failed
-gate_result  status=red   blocks=1     ← stop BLOCKED
-gate_release stop_hook_active           ← loop guard released it next turn
-```
-
-The agent visibly received the block and answered it in the transcript
-("…that instruction outranks the gate"), then `stop_hook_active` prevented the
-infinite re-block. Both halves of the guarantee verified.
-
-## 5. Two more real-data findings (found while building the MCP server)
-
-**6. `credits_consumed` is nested at `run_end.verdict.credits_consumed`.**
-Not top level, despite what the docs imply. Reading only the top level reports
-**0 credits for every run**. Correct read:
-`(.credits_consumed // .verdict.credits_consumed // .credits // 0)`, summed
-across the per-step `run_end` events. A real red run costs ~3.15 credits cached.
-
-**7. `run_end.verdict` blames the test for the app's bug — never surface it.**
-On the real dark-mode failure, `verdict` contained:
+With the bug present, the agent was asked to do something trivial and stop, and told explicitly not
+to change any code. Captured in `evidence/loop-terminal/gate-blocks-repeatedly.*`:
 
 ```
-family:          "automation_bug"
-one_liner:       "The replay failed because it expected a dark page state that
-                  was not present when the app loaded."
-suggestion:      "Update the test to explicitly turn on dark mode or verify the
-                  saved theme setup before checking the background color."
+gate_result  status=red  blocks=1     <- stop BLOCKED
+gate_result  status=red  blocks=2
+gate_result  status=red  blocks=3
+gate_result  status=red  blocks=4
+gate_release             blocks=4     <- escape hatch hands off for manual review
 ```
 
-Kane diagnosed its own replay rather than the application, and its suggestion is
-to **weaken the test** — the exact thing this project forbids. If that text were
-injected as the failure reason, the agent would be nudged to edit ground truth.
-The hooks therefore read only the literal failed assertion and the top-level
-`reason`, and never `verdict.*`. This is asserted by a grep in the parser tests.
-
-`test_url` is also absent in real runs (`final_url` is used as the fallback), and
-top-level `run_end.summary` is an empty string, so the flow summary is
-synthesised from `test_md_summary.steps`.
+Four `Stop hook feedback` entries appear in the transcript. An earlier recording of this test showed
+only **one** block followed by a clean success on a red app — that was the `stop_hook_active` bug,
+where the gate released unconditionally on the second attempt and `KANE_MAX_BLOCKS` was dead code.
+The stale artifact has been removed rather than left to contradict the claim.

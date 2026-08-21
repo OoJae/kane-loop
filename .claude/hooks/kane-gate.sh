@@ -73,7 +73,12 @@ if [ -z "$KANE_FAILS" ]; then
   # A green is only evidence if the oracle that produced it is the one we
   # started with. Denial stops the obvious edit routes; this catches the rest.
   if ! drift="$(oracle_verify)"; then
-    emit_event gate_result status "tampered" detail "$drift"
+    # Count this block like any other. Exiting 2 without incrementing made the
+    # escape hatch unreachable on this path — an unbounded block loop, which is
+    # the one thing the counter exists to prevent.
+    BLOCKS=$((BLOCKS + 1))
+    printf '%s' "$BLOCKS" >"$FAILCOUNT" 2>/dev/null || true
+    emit_event gate_result status "tampered" detail "$drift" blocks "$BLOCKS"
     REASON="You are not done: ${drift}. Restore the flows and their cached recordings to their original state, then fix the application code in target-app/src so Kane passes against the untouched suite."
     jq -nc --arg r "$REASON" \
       '{decision:"block",reason:$r,

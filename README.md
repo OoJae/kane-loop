@@ -97,7 +97,10 @@ automatically on every save. Do NOT edit anything in tests/.
 
 ## The mechanism
 
-Two hooks, wired in [`.claude/settings.json`](.claude/settings.json):
+Three hooks, wired in
+[`target-app/.claude/settings.json`](target-app/.claude/settings.json) — the agent runs with
+`cwd=target-app/`, so that is the config that actually loads; the identical
+[`.claude/settings.json`](.claude/settings.json) covers repo-root sessions:
 
 **[`kane-verify.sh`](.claude/hooks/kane-verify.sh) — PostToolUse.** Fires on `Edit|Write|MultiEdit|NotebookEdit`.
 Scopes to `target-app/src/**` so editing a README never spawns Chrome. Takes an atomic
@@ -126,8 +129,16 @@ the spec is legitimate. The denial reason is fed back to the agent, so it learns
 instead of bouncing off it.
 
 Belt and braces: the Stop gate also verifies a **SHA-256 manifest** over the objectives and their
-recordings. Tampering by any route the matcher never sees still turns a green into
-*"that pass is not evidence."*
+recordings, so tampering that the matcher never sees still turns a green into *"that pass is not
+evidence."*
+
+**Where that boundary actually ends** — an adversarial audit of this repo found it, so it is stated
+rather than implied. The agent is allowed `Bash(npm:*)` and can write `target-app/package.json`, so
+a lifecycle script is an unguarded path to the filesystem. The manifest still catches the *result*
+(the checksum moves, and the gate blocks), but the guard does not prevent the attempt. Narrowing
+the tool grant is the real fix and is deliberately not being done hours before a deadline. The
+honest claim is: **the obvious routes are denied, and anything that gets through is detected at the
+gate** — not that tampering is impossible.
 
 This isn't hypothetical. [ImpossibleBench](https://arxiv.org/abs/2510.20270) measured frontier
 models taking exactly this shortcut on **76%** of tasks where the spec and the tests conflict — and
@@ -160,7 +171,7 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
 |---|---|
 | **Ships** | `./scripts/dev.sh` → three panes live in under 30 s. Type a prompt, get a verified feature. |
 | **Verified** | A real seeded bug caught by real Chrome: RED exit 1 → GREEN exit 0, same frozen cached flow. Raw NDJSON in `evidence/`. Nothing mocked, anywhere. |
-| **Closed loop** | Hook fires Kane on save → failure injected as `additionalContext` → agent re-prompts itself → Stop gate blocks "done" until green. Both halves negative-tested. Crucially, verification is **involuntary**: Cursor, Antigravity and VS Code can all drive a browser, but only if the model *chooses* to. Here it's a hook, so it always happens. |
+| **Closed loop** | Hook fires Kane on save → failure injected as `additionalContext` → agent re-prompts itself → Stop gate blocks "done" until green. Both halves negative-tested — the gate is captured blocking **four times** then handing off ([`evidence/loop-terminal/gate-blocks-repeatedly.*`](evidence/loop-terminal/)). Crucially, verification is **involuntary**: Cursor, Antigravity and VS Code can all drive a browser, but only if the model *chooses* to. Here it's a hook, so it always happens. |
 | **Craft** | Three-pane live viewer, one-command start, honest disclosures, and a commit history that narrates the build including the bugs we found in our own hooks. |
 
 ---
