@@ -26,6 +26,16 @@ const ENTRIES: Entry[] = [
     ],
   },
   {
+    hash: 'd867c24',
+    kind: 'design',
+    title: 'The Run button could never have worked',
+    body: [
+      'The hosted console read its run key from `import.meta.env.VITE_RUN_KEY`. Vite inlines that at build time — inside `docker build` — while the host injects it as a runtime service variable, and the Dockerfile declared no matching `ARG`. The variable was set, with the right value, on the platform. The shipped bundle contained the empty string.',
+      'So the button sent no key, the server answered 401, and a judge was told to clone the repo instead. It had never worked: the commit that introduced the key shipped a Dockerfile with no `ARG` either. Not a regression — original.',
+      'The tempting fix was a build arg, which would have published an execution key in a public JavaScript bundle. Instead the key is now pasted at the point of use and held in memory. The `import.meta.env` read was deleted rather than left unused, so restoring the old behaviour requires inventing a mechanism instead of connecting two things that already looked wired together.',
+    ],
+  },
+  {
     hash: '7cbffad',
     kind: 'retraction',
     title: 'Ten screenshots showed a URL that never existed',
@@ -127,7 +137,7 @@ export default function Log() {
         </p>
         <p className="mt-4">
           These are the real ones — three retractions where this repository claimed something that
-          was not true, four bypasses that would have made a green meaningless, and three design
+          was not true, four bypasses that would have made a green meaningless, and four design
           errors that looked like working features. Every entry links to the commit that fixed it.
         </p>
       </PageHead>
