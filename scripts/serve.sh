@@ -26,8 +26,19 @@ command -v jq       >/dev/null 2>&1 || die "jq missing from the image"
 # which the hooks now report as "not an app bug", but it is still a dead demo.
 if [ -n "${KANE_USERNAME:-}" ] && [ -n "${KANE_ACCESS_KEY:-}" ]; then
   log "authenticating kane-cli as ${KANE_USERNAME}"
-  kane-cli login --username "$KANE_USERNAME" --access-key "$KANE_ACCESS_KEY" >/dev/null 2>&1 \
-    || log "WARNING: kane-cli login failed — runs will report an auth error, not an app bug"
+  # --project-id/--folder-id skip the interactive picker. Without them a
+  # non-interactive login authenticates but has no project selected, and every
+  # run dies with exit 2 before producing a verdict.
+  KANE_LOGIN_ARGS=(--username "$KANE_USERNAME" --access-key "$KANE_ACCESS_KEY")
+  [ -n "${KANE_PROJECT_ID:-}" ] && KANE_LOGIN_ARGS+=(--project-id "$KANE_PROJECT_ID")
+  [ -n "${KANE_FOLDER_ID:-}" ]  && KANE_LOGIN_ARGS+=(--folder-id "$KANE_FOLDER_ID")
+  if kane-cli login "${KANE_LOGIN_ARGS[@]}" >/tmp/kane-login.log 2>&1; then
+    log "kane-cli authenticated"
+  else
+    log "WARNING: kane-cli login failed — runs will report an auth error, not an app bug"
+    sed -n '1,12p' /tmp/kane-login.log 2>/dev/null || true
+  fi
+  kane-cli whoami 2>&1 | sed -n '1,8p' || true
 else
   log "WARNING: KANE_USERNAME/KANE_ACCESS_KEY not set — Kane cannot verify anything"
 fi
