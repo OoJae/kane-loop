@@ -72,6 +72,10 @@ const PORT = Number(process.env.PORT ?? 4000);
 /** Overridable so the spawn path is testable without burning agent tokens. */
 const CLAUDE_BIN = process.env.CLAUDE_BIN ?? "claude";
 const UI_ORIGIN = process.env.KANE_UI_ORIGIN ?? "http://localhost:4321";
+const WEB_PORT = new URL(UI_ORIGIN).port || "4321";
+// Bind loopback only. With no host argument Node listens on 0.0.0.0, which put
+// "spawn an AI agent that edits my files" on every network this laptop joins.
+const HOST = process.env.KANE_HOST ?? "127.0.0.1";
 
 const REPLAY_LINES = 2000;
 /** Cap on how much of the tail we read back for replay. */
@@ -385,13 +389,34 @@ function stopRun(): { stopped: boolean; runId: string | null } {
 
 const app = express();
 
+// POST /run spawns a coding agent with --permission-mode acceptEdits on this
+// machine, so the origin check is a security boundary, not a formality:
+// reflecting any origin would let any page the user happens to visit start an
+// agent that edits their files.
+const ALLOWED_ORIGINS = new Set([UI_ORIGIN, `http://127.0.0.1:${WEB_PORT}`]);
 app.use(
   cors({
-    // Permissive for local dev; the UI lives on UI_ORIGIN.
-    origin: true,
+    origin(origin, cb) {
+      // No Origin header = curl, the tests, same-origin. Browsers always send one.
+      // Returning false (rather than an Error) omits the CORS headers instead of
+      // producing a 500 with a stack trace.
+      cb(null, !origin || ALLOWED_ORIGINS.has(origin));
+    },
     credentials: true,
   }),
 );
+
+// Explicit rejection, not just absent CORS headers. The loopback bind stops the
+// LAN, but DNS rebinding can still point a hostname at 127.0.0.1 and get a
+// browser to talk to us — at which point the Origin header is what gives it away.
+app.use((req, res, next) => {
+  const origin = req.get("origin");
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    res.status(403).json({ error: `origin not allowed: ${origin}` });
+    return;
+  }
+  next();
+});
 app.use(express.json({ limit: "1mb" }));
 
 app.use("/evidence", express.static(EVIDENCE_DIR, { fallthrough: true, index: false }));
@@ -456,7 +481,16 @@ app.post("/stop", (_req, res) => {
 });
 
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+// CORS does not apply to WebSockets — the browser will happily open one to a
+// different origin. Without this check, any page could read the live agent
+// transcript and Kane verdicts off this machine.
+const wss = new WebSocketServer({
+  server,
+  verifyClient({ origin }, done) {
+    if (!origin || ALLOWED_ORIGINS.has(origin)) return done(true);
+    done(false, 403, "origin not allowed");
+  },
+});
 
 wss.on("connection", (socket: WebSocket) => {
   clients.add(socket);
@@ -485,10 +519,10 @@ wss.on("connection", (socket: WebSocket) => {
 const poll = setInterval(scheduleDrain, POLL_INTERVAL_MS);
 poll.unref();
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   startTailer();
   console.log("");
-  console.log(`  Kane Loop orchestrator listening on http://localhost:${PORT}`);
+  console.log(`  Kane Loop orchestrator listening on http://${HOST}:${PORT}`);
   console.log(`  WebSocket           ws://localhost:${PORT}`);
   console.log(`  Tailing             ${EVENTS_FILE}`);
   console.log(`  Agent cwd           ${TARGET_APP_DIR}`);
