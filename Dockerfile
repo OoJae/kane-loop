@@ -25,6 +25,18 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends jq curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
+# Kane wants GOOGLE CHROME specifically, not the Chromium this image ships:
+# "Google Chrome is required but was not found at /usr/bin/google-chrome".
+# That is the real reason every run exited 2 — nothing to do with sandboxing.
+# This is the install its own error message recommends. amd64 only, which is
+# what the host runs; Google publishes no Chrome for Linux ARM.
+RUN curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends /tmp/chrome.deb \
+ && rm -f /tmp/chrome.deb \
+ && rm -rf /var/lib/apt/lists/* \
+ && google-chrome --version
+
 WORKDIR /app
 
 # The two CLIs the loop is made of. Pinned so a deployment cannot drift from the
