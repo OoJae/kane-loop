@@ -1,4 +1,5 @@
 import { clockTime } from '../lib/format'
+import { SHOT_ENDPOINT } from '../lib/config'
 import type { KanePhase } from '../lib/protocol'
 
 interface KaneInjectionCardProps {
@@ -7,6 +8,8 @@ interface KaneInjectionCardProps {
   loop: number
   ts: number
   blocks: boolean
+  /** Absolute path to Kane's screenshot of the failing step, if it sent one. */
+  screenshot?: string
   /** Replayed history renders identically but without the entrance animation. */
   replay: boolean
 }
@@ -22,6 +25,7 @@ export function KaneInjectionCard({
   loop,
   ts,
   blocks,
+  screenshot,
   replay,
 }: KaneInjectionCardProps) {
   const isGate = phase === 'gate'
@@ -58,6 +62,20 @@ export function KaneInjectionCard({
         <pre className="max-h-72 overflow-auto border-l-2 border-red/70 pl-3 font-mono text-[13.5px] leading-[1.55] whitespace-pre-wrap text-ice scroll-slim">
           {detail}
         </pre>
+
+        {screenshot === undefined || screenshot === '' ? null : (
+          <figure className="mt-3 overflow-hidden rounded-lg border border-red/40 bg-[#12060a]">
+            <img
+              src={`${SHOT_ENDPOINT}?p=${encodeURIComponent(screenshot)}`}
+              alt="What Kane's browser saw when the assertion failed"
+              loading="lazy"
+              className="block max-h-[280px] w-full object-cover object-top"
+            />
+            <figcaption className="border-t border-red/25 px-3 py-1.5 font-mono text-[10.5px] tracking-[0.08em] text-red-soft uppercase">
+              what the browser actually saw · the agent opens this file too
+            </figcaption>
+          </figure>
+        )}
       </div>
 
       <footer className="relative flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-red/25 bg-[#1a070a]/60 px-4 py-2.5 text-[11.5px] leading-snug text-red-soft">

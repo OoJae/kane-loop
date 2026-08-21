@@ -73,6 +73,7 @@ export function TranscriptItemView({ item }: { item: TranscriptItem }) {
           loop={item.loop}
           ts={item.ts}
           blocks={item.blocks}
+          screenshot={item.screenshot}
           replay={item.replay}
         />
       )

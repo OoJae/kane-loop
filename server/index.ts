@@ -20,6 +20,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import type { Readable } from "node:stream";
@@ -550,6 +551,46 @@ app.get("/diag", (req, res) => {
   res.json({ ok: true, stderrTail });
 });
 
+/**
+ * Serve one of Kane's step screenshots.
+ *
+ * Kane writes them under ~/.testmuai/…/replay-test/screenshots/, outside the
+ * repo, so the UI cannot reach them without help. The path arrives from the
+ * event log rather than from a user, but it is still untrusted input on a
+ * public deployment: resolve it, then require it to sit inside one of two
+ * roots, and serve only image files.
+ */
+const SHOT_ROOTS = [path.join(os.homedir(), ".testmuai"), EVIDENCE_DIR];
+
+app.get("/shot", (req, res) => {
+  const raw = typeof req.query["p"] === "string" ? req.query["p"] : "";
+  if (raw === "") {
+    res.status(400).json({ ok: false, error: "p is required" });
+    return;
+  }
+
+  const resolved = path.resolve(raw);
+  const inside = SHOT_ROOTS.some(
+    (root) => resolved === root || resolved.startsWith(root + path.sep),
+  );
+  if (!inside) {
+    res.status(403).json({ ok: false, error: "path is outside the allowed roots" });
+    return;
+  }
+  if (!/\.(png|jpe?g|webp)$/i.test(resolved)) {
+    res.status(403).json({ ok: false, error: "not an image" });
+    return;
+  }
+  if (!fs.existsSync(resolved)) {
+    res.status(404).json({ ok: false, error: "no such screenshot" });
+    return;
+  }
+
+  // Immutable: a given run's screenshot never changes once written.
+  res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  res.sendFile(resolved);
+});
+
 app.post("/stop", (_req, res) => {
   const result = stopRun();
   res.json({ ok: true, ...result });
@@ -635,7 +676,7 @@ app.use((req, res, next) => {
 // a single origin and a single service rather than three.
 if (fs.existsSync(WEB_DIST)) {
   app.use(express.static(WEB_DIST, { index: "index.html" }));
-  app.get(/^\/(?!run$|stop$|health$|evidence\/|app\/?).*/, (_req, res) => {
+  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|evidence\/|app\/?).*/, (_req, res) => {
     res.sendFile(path.join(WEB_DIST, "index.html"));
   });
 }

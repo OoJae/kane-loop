@@ -61,6 +61,12 @@ export interface FlowEndEvent extends LoopEventBase {
   /** Extra fields real runs carry beyond the protocol doc. */
   reason_code?: string
   session_dir?: string
+  /**
+   * Absolute path to Kane's screenshot of the step that decided the verdict.
+   * Kane emits it on every run_end; the hooks forward it so the agent and the
+   * UI can look at the same picture instead of just reading the assertion.
+   */
+  screenshot?: string
 }
 
 export interface FlowErrorEvent extends LoopEventBase {

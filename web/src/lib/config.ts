@@ -43,6 +43,8 @@ export const RUN_ENDPOINT = `${SERVER_URL}/run`
 export const STOP_ENDPOINT = `${SERVER_URL}/stop`
 /** The orchestrator serves saved Kane artefacts here. */
 export const EVIDENCE_BASE = `${SERVER_URL}/evidence`
+/** Kane's screenshots live outside the repo, so the orchestrator serves them. */
+export const SHOT_ENDPOINT = `${SERVER_URL}/shot`
 
 /**
  * Key for POST /run on a hosted instance. Baked in at build time so the

@@ -58,6 +58,8 @@ export interface FlowVerdict {
 export interface Evidence {
   runDir?: string
   testUrl?: string
+  /** Absolute path to Kane's screenshot of the deciding step. */
+  screenshot?: string
   flow?: string
   ts: number
 }
@@ -122,6 +124,12 @@ export type TranscriptItem =
       detail: string
       loop: number
       blocks: boolean
+      /**
+       * Kane's screenshot of the step that failed. flow_end always lands before
+       * the verify_result/gate_result that pushes this card, so the evidence is
+       * already populated by the time we get here.
+       */
+      screenshot?: string
     }
 
 export interface AppState {
@@ -337,6 +345,7 @@ function applyLoopEvent(
         setStatus(draft, 'RED', at)
         pushTranscript(draft, {
           kind: 'injection',
+          screenshot: draft.evidence?.screenshot,
           id: nextId(draft),
           ts,
           replay,
@@ -376,6 +385,7 @@ function applyLoopEvent(
         setStatus(draft, 'RED', at)
         pushTranscript(draft, {
           kind: 'injection',
+          screenshot: draft.evidence?.screenshot,
           id: nextId(draft),
           ts,
           replay,
@@ -458,6 +468,7 @@ function applyFlowEnd(
   // evidence captured by an earlier flow in the same session.
   const runDir = present(event.run_dir) ?? present(event.session_dir)
   const testUrl = present(event.test_url)
+  const screenshot = present(event.screenshot)
   const verdict: FlowVerdict = {
     id: nextId(draft),
     flow: event.flow ?? 'unknown flow',
@@ -480,6 +491,7 @@ function applyFlowEnd(
     draft.evidence = {
       runDir: runDir ?? draft.evidence?.runDir,
       testUrl: testUrl ?? draft.evidence?.testUrl,
+      screenshot: screenshot ?? draft.evidence?.screenshot,
       flow: verdict.flow,
       ts,
     }
