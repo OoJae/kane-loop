@@ -303,7 +303,6 @@ Ports: 5173 target app · 4000 orchestrator · 4321 UI.
 | [`docs/tool-surface.md`](docs/tool-surface.md) | everything we verified about Kane + Claude Code |
 | [`docs/event-protocol.md`](docs/event-protocol.md) | the hooks → server → UI contract |
 | [`scripts/`](scripts/) | `dev.sh` (local), `demo-reset.sh` (re-seed the bug), `capture-run.sh`, `serve.sh` (container) |
-| [`demo/`](demo/) | the demo film: capture scripts, the voiceover script, and the HyperFrames composition |
 | [`Dockerfile`](Dockerfile) · [`railway.json`](railway.json) | the hosted deployment — Chrome, both CLIs, one port |
 
 ---
