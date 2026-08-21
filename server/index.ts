@@ -89,6 +89,10 @@ const HOST = process.env.KANE_HOST ?? "127.0.0.1";
 const RUN_SECRET = process.env.KANE_RUN_SECRET ?? "";
 /** Built UI (web/dist), served by this process so one host serves everything. */
 const WEB_DIST = process.env.KANE_WEB_DIST ?? path.join(ROOT, "web", "dist");
+const SITE_DIST = process.env.KANE_SITE_DIST ?? path.join(ROOT, "site", "dist");
+// One copy of the recordings, mounted at a stable path. Copying them into the
+// site's own public/ is what let the hero image and its log drift apart before.
+const RECORDINGS_DIR = path.join(ROOT, "web", "public", "recordings");
 
 const REPLAY_LINES = 2000;
 /** Cap on how much of the tail we read back for replay. */
@@ -674,9 +678,34 @@ app.use((req, res, next) => {
 
 // Serve the built UI from this process when it exists, so a hosted deployment is
 // a single origin and a single service rather than three.
+//
+// Order matters and is not arbitrary:
+//   /recordings  one copy, read by both the console and the landing page
+//   /console     the orchestrator UI, plus its own SPA fallback
+//   /            the landing site, whose fallback must exclude everything above
+// The Vite passthrough above still runs first, which is why the landing site can
+// never own a /src/ path — its built assets go to /assets, so this costs nothing.
+if (fs.existsSync(RECORDINGS_DIR)) {
+  app.use("/recordings", express.static(RECORDINGS_DIR, { fallthrough: true, index: false }));
+}
+
 if (fs.existsSync(WEB_DIST)) {
+  app.use("/console", express.static(WEB_DIST, { index: "index.html" }));
+  app.get(/^\/console(\/.*)?$/, (_req, res) => {
+    res.sendFile(path.join(WEB_DIST, "index.html"));
+  });
+}
+
+if (fs.existsSync(SITE_DIST)) {
+  app.use(express.static(SITE_DIST, { index: "index.html" }));
+  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|console|recordings\/|evidence\/|app\/?).*/, (_req, res) => {
+    res.sendFile(path.join(SITE_DIST, "index.html"));
+  });
+} else if (fs.existsSync(WEB_DIST)) {
+  // No landing site built — fall back to the console at the root so a bare
+  // `npm run build && npm start` still gives you a working UI.
   app.use(express.static(WEB_DIST, { index: "index.html" }));
-  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|evidence\/|app\/?).*/, (_req, res) => {
+  app.get(/^\/(?!run$|stop$|health$|diag$|shot$|recordings\/|evidence\/|app\/?).*/, (_req, res) => {
     res.sendFile(path.join(WEB_DIST, "index.html"));
   });
 }

@@ -46,15 +46,20 @@ RUN npm install -g @testmuai/kane-cli@0.8.4 @anthropic-ai/claude-code@2.1.238
 # Dependencies first, so a source-only change does not reinstall the world.
 COPY server/package*.json ./server/
 COPY web/package*.json ./web/
+COPY site/package*.json ./site/
 COPY target-app/package*.json ./target-app/
 RUN cd server && npm ci --include=dev \
  && cd ../web && npm ci --include=dev \
+ && cd ../site && npm ci --include=dev \
  && cd ../target-app && npm ci --include=dev
 
 COPY . .
 
-# The UI is served by the orchestrator, so one origin serves everything.
-RUN cd web && npm run build
+# One origin serves everything: the landing site at /, the console at /console.
+# KANE_BASE is what rewrites the console's asset URLs — without it both builds
+# emit /assets and the second one mounted wins.
+RUN cd web && KANE_BASE=/console/ npm run build \
+ && cd ../site && npm run build
 
 # The demo rests on the app being broken to begin with. A container built from a
 # tree where someone left the fix applied would open green and prove nothing.

@@ -117,7 +117,7 @@ function parseLines(text: string, seqBase: number): TimedLine[] {
   return out
 }
 
-/** Longest gap we will actually sit through, so a 3-minute run plays in ~40s. */
+/** Longest gap we will actually sit through: live-loop's 82s plays in ~38s. */
 const MAX_GAP_MS = 1400
 /** Floor, so a burst of same-millisecond events still reads as motion. */
 const MIN_GAP_MS = 90
@@ -132,7 +132,8 @@ function labelOf(raw: unknown): string {
 /**
  * Merge both channels by wall clock and convert to the step shape `useDemo`
  * already drives. Real inter-event gaps are preserved in proportion but clamped,
- * because the honest duration of these runs is around three minutes.
+ * because nobody will sit through the dead air between a save and a verdict.
+ * live-loop's 218 lines span 82 seconds of wall clock and play back in ~38.
  */
 export function toSteps(eventsText: string, streamText: string | null): DemoStep[] {
   // seqBase keeps each file's own order intact, and breaks ties between the two

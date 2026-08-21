@@ -37,14 +37,15 @@ Kane isn't tacked on at the end. **The closed loop is the product.**
 
 ## Try it without installing anything
 
-**[Watch the loop close ↗](https://kane-loop-production.up.railway.app/?replay=live-loop)** — a real
+**[Watch the loop close ↗](https://kane-loop-production.up.railway.app/console/?replay=live-loop)** — a real
 recorded session replayed from [its own committed log](evidence/ui/live-loop.events.ndjson), line by
 line. ~40 seconds, no setup. The banner says RECORDED, because it is.
 
-The same host runs the loop **live** at
-[kane-loop-production.up.railway.app](https://kane-loop-production.up.railway.app) — the app pane is
-real and interactive. Starting a run needs a key (it spends real Kane credits and executes code in
-the container), so the Run button is inert without one; the key ships with the submission.
+The same host runs the loop **live** in the console at
+[/console](https://kane-loop-production.up.railway.app/console/) — the app pane is real and
+interactive. Starting a run needs a key (it spends real Kane credits and executes code in the
+container), so the Run button is inert without one; the key ships with the submission.
+[The root URL](https://kane-loop-production.up.railway.app) is the project's landing page.
 
 ## Quickstart — the real thing, locally
 
@@ -69,7 +70,7 @@ real browser → the failure **and Kane's screenshot of the failing page** are i
 agent's context (the red card) → the agent answers "I added the read side but not the write.
 Adding persistence now" → GREEN, and the Stop gate releases.*
 
-*This frame is [`?replay=live-loop`](https://kane-loop-production.up.railway.app/?replay=live-loop)
+*This frame is [`?replay=live-loop`](https://kane-loop-production.up.railway.app/console/?replay=live-loop)
 rendering [`evidence/ui/live-loop.events.ndjson`](evidence/ui/live-loop.events.ndjson) line by line,
 so every number on screen — including the 2.08 credits — is in that file. Check it.*
 
