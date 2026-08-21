@@ -77,7 +77,7 @@ after Gate 1 and the files are made read-only.
 ### ⚠️ Findings from real runs that no doc would have told us
 
 These cost several runs to learn and they invalidate parts of the build guide's
-reference code. All three are fixed in `.claude/hooks/kane-lib.sh`.
+reference code. All five are fixed in `.claude/hooks/kane-lib.sh`.
 
 **1. `run_end` fires once PER STEP, not once per file.**
 A four-step testmd emits four `run_end` events. The guide's
@@ -89,7 +89,7 @@ as authoritative (`0` pass / `1` fail / `2` error / `3` timeout).
 **2. The credits field is `credits_consumed`, not `credits`.**
 Both the build guide and `agents.md` say `credits`. Reality (v0.8.4) is
 `credits_consumed`, a float, per step — sum them for a run total. **And it is
-nested inside `run_end.verdict`, not at the top level — see finding 6, which is
+nested inside `run_end.verdict`, not at the top level — see finding 2, which is
 the form the hooks actually use.** Observed: ~3.15 credits for a cached red run,
 ~34 to author a flow from cold.
 

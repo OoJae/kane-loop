@@ -26,6 +26,9 @@ interface Recording {
   verdict: 'GREEN' | 'RED'
   outcome: string
   runs: Run[]
+  /** Repo-relative paths — they differ per recording, so never build them by id. */
+  eventsPath: string
+  streamPath: string
 }
 
 const RECORDINGS: Recording[] = [
@@ -39,6 +42,8 @@ const RECORDINGS: Recording[] = [
     credits: 2.0848,
     verdict: 'GREEN',
     outcome: 'gate released — every flow passes, oracle intact',
+    eventsPath: 'evidence/ui/live-loop.events.ndjson',
+    streamPath: 'evidence/ui/live-loop.stream.json',
     runs: [
       { phase: 'verify', status: 'failed', duration: 23, credits: 2.0848, steps: '3 / 4', line: 'failed assertion: the page background is still dark' },
       { phase: 'verify', status: 'passed', duration: 12, credits: 0, steps: '4 / 4', line: 'all steps passed' },
@@ -55,6 +60,8 @@ const RECORDINGS: Recording[] = [
     credits: 14.4368,
     verdict: 'RED',
     outcome: 'blocked 4 times, then released for manual review',
+    eventsPath: 'evidence/loop-terminal/gate-blocks-repeatedly.events.ndjson',
+    streamPath: 'evidence/loop-terminal/gate-blocks-repeatedly.stream.json',
     runs: [
       { phase: 'gate', status: 'failed', duration: 27, credits: 2.803, steps: '3 / 4', line: 'failed assertion: the page background is still dark' },
       { phase: 'gate', status: 'failed', duration: 33, credits: 3.6576, steps: '3 / 4', line: 'failed assertion: the page background is still dark' },
@@ -129,7 +136,7 @@ export default function Evidence() {
                     Replay it →
                   </a>
                   <a
-                    href={blob(`evidence/ui/${r.id}.events.ndjson`)}
+                    href={blob(r.eventsPath)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--color-line)] px-4 py-2.5 text-[13.5px] font-semibold transition-colors duration-200 hover:border-[color:var(--color-dim)]"
@@ -137,7 +144,7 @@ export default function Evidence() {
                     Kane events ↗
                   </a>
                   <a
-                    href={blob(`evidence/ui/${r.id}.stream.json`)}
+                    href={blob(r.streamPath)}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--color-line)] px-4 py-2.5 text-[13.5px] font-semibold transition-colors duration-200 hover:border-[color:var(--color-dim)]"

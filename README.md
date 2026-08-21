@@ -88,7 +88,7 @@ Open **http://localhost:4321**, type
 
 and watch the loop close: **RED → failure injected → agent self-corrects → GREEN → gate releases.**
 
-**Requirements:** Node ≥ 18, Chrome, `jq`, Claude Code, and `kane-cli` authenticated
+**Requirements:** Node ≥ 20.19 (or ≥ 22.12 — Vite 7 requires it), Chrome, `jq`, Claude Code, and `kane-cli` authenticated
 (`npm i -g @testmuai/kane-cli && kane-cli login`).
 
 ![The loop closing live](evidence/ui/live-loop-hero.png)
@@ -151,8 +151,9 @@ automatically on every save. Do NOT edit anything in tests/.
 
 Three hooks, wired in
 [`target-app/.claude/settings.json`](target-app/.claude/settings.json) — the agent runs with
-`cwd=target-app/`, so that is the config that actually loads; the identical
-[`.claude/settings.json`](.claude/settings.json) covers repo-root sessions:
+`cwd=target-app/`, so that is the config that actually loads; the matching
+[`.claude/settings.json`](.claude/settings.json) covers repo-root sessions (same hooks; the
+paths resolve from a different depth):
 
 **[`kane-verify.sh`](.claude/hooks/kane-verify.sh) — PostToolUse.** Fires on `Edit|Write|MultiEdit|NotebookEdit`.
 Scopes to `target-app/src/**` so editing a README never spawns Chrome. Takes an atomic
@@ -232,7 +233,7 @@ app."*
 ### Verified, not assumed
 
 `additionalContext` delivery was proven by direct probe rather than taken on trust — see
-[`docs/tool-surface.md`](docs/tool-surface.md), which also records four findings that
+[`docs/tool-surface.md`](docs/tool-surface.md), which also records five findings that
 contradict the published docs and would silently break a naive implementation. The most
 important: **a testmd run emits one `run_end` per step, not one per file**, so the widely-copied
 `jq 'select(.type=="run_end")' | tail -1` reports only the last step and misses earlier failures.
@@ -278,13 +279,14 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
 - **The live transcript is public on purpose.** Anyone who opens a WebSocket to the host sees the
   agent's stream: the prompt, its reasoning, its tool calls, and the contents of files it reads.
   Spectating is a feature here — you should be able to watch a run without holding a key that
-  spends money. Only *acting* is gated: `/run`, `/stop` and `/diag` all require the key. Credentials
-  are stripped from the child process and redacted from anything broadcast, so what is public is
-  the work, not the secrets.
+  spends money. Only *acting* is gated: `/run`, `/stop`, `/diag` and `/reset` all require the key.
+  Credentials are stripped from the child process, and the raw stdout/stderr passthrough is
+  redacted before broadcast — but parsed `stream-json`, which is the agent's own text and tool
+  calls, goes out verbatim. What is public is the work, not the environment.
 
 ## Pinned versions
 
-Kane CLI **0.8.4** · Claude Code **2.1.238** · Node 26 · macOS + Chrome.
+Kane CLI **0.8.4** · Claude Code **2.1.238** — both pinned in the [`Dockerfile`](Dockerfile) · macOS + Chrome locally; the container runs the Node its Playwright base image ships.
 Ports: 5173 target app · 4000 orchestrator · 4321 UI.
 
 ## Repo map
@@ -296,10 +298,12 @@ Ports: 5173 target app · 4000 orchestrator · 4321 UI.
 | [`tests/`](tests/) | frozen Kane flows — immutable ground truth |
 | [`server/`](server/) | orchestrator: spawns the agent, tails the event log, serves evidence |
 | [`web/`](web/) | the three-pane viewer |
+| [`site/`](site/) | the landing page and the three pages behind it — `/`, `/how-it-works`, `/evidence`, `/log` |
 | [`evidence/`](evidence/) | real red + green run artifacts |
 | [`docs/tool-surface.md`](docs/tool-surface.md) | everything we verified about Kane + Claude Code |
 | [`docs/event-protocol.md`](docs/event-protocol.md) | the hooks → server → UI contract |
 | [`scripts/`](scripts/) | `dev.sh` (local), `demo-reset.sh` (re-seed the bug), `capture-run.sh`, `serve.sh` (container) |
+| [`demo/`](demo/) | the demo film: capture scripts, the voiceover script, and the HyperFrames composition |
 | [`Dockerfile`](Dockerfile) · [`railway.json`](railway.json) | the hosted deployment — Chrome, both CLIs, one port |
 
 ---

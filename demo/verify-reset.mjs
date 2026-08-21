@@ -1,0 +1,17 @@
+import { chromium, B, KEY, hold } from './lib.mjs'
+const b = await chromium.launch(); const p = await b.newPage({viewport:{width:1700,height:1000}, deviceScaleFactor:2})
+const errs=[]; p.on('pageerror',e=>errs.push(e.message.slice(0,80)))
+await p.goto(B+'/console/',{waitUntil:'networkidle'}); await hold(p,2200)
+await p.fill('#run-key', KEY); await p.click('button:has-text("Enable Run")'); await hold(p,2600)
+const chip = p.locator('div[title*="held in memory"]')
+console.log('  key chip      :', (await chip.innerText()).replace(/\n/g,' '))
+const reset = p.locator('button:has-text("reset demo")')
+console.log('  reset control :', await reset.count() ? 'present ✓' : 'MISSING ✗')
+console.log('  tooltip       :', await reset.getAttribute('title'))
+await chip.screenshot({path:'capture/reset-chip.png'})
+// actually press it
+await reset.click(); await hold(p,3000)
+const notice = await p.locator('text=/Demo reset/').count()
+console.log('  after pressing:', notice ? 'confirmation notice shown ✓' : 'no notice ✗')
+console.log('  errors        :', errs.length?errs:'none')
+await b.close()
