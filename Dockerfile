@@ -17,6 +17,14 @@ ENV NODE_ENV=production \
     KANE_HOST=0.0.0.0 \
     KANE_TARGET_URL=http://127.0.0.1:5173
 
+# The hooks are shell scripts: jq parses every Kane verdict, curl probes the dev
+# server, and the integrity manifest needs a sha256 tool. The Playwright image
+# ships none of them, and serve.sh's preflight caught that on the first boot —
+# which is the whole reason that preflight exists rather than failing silently.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends jq curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # The two CLIs the loop is made of. Pinned so a deployment cannot drift from the
