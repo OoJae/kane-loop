@@ -219,3 +219,42 @@ run_kane_suite() {
     rm -f "$raw"
   done
 }
+
+# --- oracle integrity --------------------------------------------------------
+# Denial (kane-guard.sh) stops the obvious routes. This catches every other one:
+# a checksum over the flows and their cached recordings, taken when the suite is
+# known-good and re-checked at the gate. If the oracle moved during a session,
+# any green it produced is not evidence.
+#
+# Deliberately covers output-<stem>/ as well as the .md — the cached recording
+# is what Kane replays, so it is the more valuable thing to tamper with.
+oracle_manifest() {
+  # -print0/-0: this repo's path contains a space, and plain xargs splits on it
+  # (which silently hashed nothing at all the first time round).
+  # Sorting the shasum output rather than the filenames keeps it deterministic
+  # without needing a null-aware sort.
+  find "$ROOT/tests" -type f \( -name '*_test.md' -o -name '*.ndjson' -o -name '*.json' \) \
+    -not -path '*/pending/*' -print0 2>/dev/null \
+    | xargs -0 shasum -a 256 2>/dev/null \
+    | LC_ALL=C sort \
+    | shasum -a 256 2>/dev/null | awk '{print $1}'
+}
+
+oracle_seal() {
+  local m; m="$(oracle_manifest)"
+  [ -n "$m" ] && printf '%s' "$m" >"$ROOT/.kane-oracle.sha256"
+}
+
+# Echoes a human-readable problem and returns 1 when the oracle has changed.
+oracle_verify() {
+  local expected actual
+  [ -f "$ROOT/.kane-oracle.sha256" ] || { oracle_seal; return 0; }
+  expected="$(cat "$ROOT/.kane-oracle.sha256" 2>/dev/null)"
+  actual="$(oracle_manifest)"
+  [ -z "$actual" ] && return 0
+  if [ "$expected" != "$actual" ]; then
+    echo "the Kane flows or their cached recordings changed during this session (oracle checksum ${expected:0:12}… → ${actual:0:12}…), so any pass since then is not evidence"
+    return 1
+  fi
+  return 0
+}

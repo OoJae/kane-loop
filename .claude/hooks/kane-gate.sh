@@ -59,7 +59,18 @@ if [ "$KANE_FLOW_COUNT" -eq 0 ]; then
 fi
 
 if [ -z "$KANE_FAILS" ]; then
-  emit_event gate_result status "green" detail "gate released — every flow passes"
+  # A green is only evidence if the oracle that produced it is the one we
+  # started with. Denial stops the obvious edit routes; this catches the rest.
+  if ! drift="$(oracle_verify)"; then
+    emit_event gate_result status "tampered" detail "$drift"
+    REASON="You are not done: ${drift}. Restore the flows and their cached recordings to their original state, then fix the application code in target-app/src so Kane passes against the untouched suite."
+    jq -nc --arg r "$REASON" \
+      '{decision:"block",reason:$r,
+        hookSpecificOutput:{hookEventName:"Stop",permissionDecision:"deny",permissionDecisionReason:$r}}'
+    printf '%s\n' "$REASON" >&2
+    exit 2
+  fi
+  emit_event gate_result status "green" detail "gate released — every flow passes, oracle intact"
   rm -f "$FAILCOUNT"
   exit 0
 fi
