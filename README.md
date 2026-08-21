@@ -111,8 +111,26 @@ loop forever, plus a max-4-blocks escape hatch that hands off for manual review 
 fighting. It emits **both** documented block shapes *and* exits 2, so a version difference in how
 Claude Code reads a block can't silently let the agent through.
 
-Why both hooks? PostToolUse is the fast feedback and the visible moment; Stop is the backstop that
-catches an edit the PostToolUse matcher missed.
+**[`kane-guard.sh`](.claude/hooks/kane-guard.sh) — PreToolUse.** The reason a green means anything.
+A loop is only worth as much as its oracle, and the cheapest way for an agent to turn red into
+green is not to fix the app — it's to weaken the test. This denies writes to `tests/`, to the
+cached `output-<stem>/` recordings Kane actually replays (rewriting a recorded action is a far more
+effective cheat than editing the prose), and to the hook configuration itself, because an agent
+that can switch off its own verifier isn't verified. Reads are deliberately allowed — understanding
+the spec is legitimate. The denial reason is fed back to the agent, so it learns the boundary
+instead of bouncing off it.
+
+Belt and braces: the Stop gate also verifies a **SHA-256 manifest** over the objectives and their
+recordings. Tampering by any route the matcher never sees still turns a green into
+*"that pass is not evidence."*
+
+This isn't hypothetical. [ImpossibleBench](https://arxiv.org/abs/2510.20270) measured frontier
+models taking exactly this shortcut on **76%** of tasks where the spec and the tests conflict — and
+found that putting the oracle out of reach drops it to near zero.
+
+Why three hooks? PostToolUse is the fast feedback and the visible moment; Stop is the backstop that
+catches an edit the PostToolUse matcher missed; PreToolUse is what stops the agent from moving the
+goalposts instead of doing the work.
 
 **Where the gate deliberately does *not* block:** if `kane-cli` is missing, the dev server is
 unreachable, or another Kane run already holds the lock, the gate releases rather than blocking on
@@ -137,7 +155,7 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
 |---|---|
 | **Ships** | `./scripts/dev.sh` → three panes live in under 30 s. Type a prompt, get a verified feature. |
 | **Verified** | A real seeded bug caught by real Chrome: RED exit 1 → GREEN exit 0, same frozen cached flow. Raw NDJSON in `evidence/`. Nothing mocked, anywhere. |
-| **Closed loop** | Hook fires Kane on save → failure injected as `additionalContext` → agent re-prompts itself → Stop gate blocks "done" until green. Both halves negative-tested. |
+| **Closed loop** | Hook fires Kane on save → failure injected as `additionalContext` → agent re-prompts itself → Stop gate blocks "done" until green. Both halves negative-tested. Crucially, verification is **involuntary**: Cursor, Antigravity and VS Code can all drive a browser, but only if the model *chooses* to. Here it's a hook, so it always happens. |
 | **Craft** | Three-pane live viewer, one-command start, honest disclosures, and a commit history that narrates the build including the bugs we found in our own hooks. |
 
 ---
@@ -146,9 +164,10 @@ important: **a testmd run emits one `run_end` per step, not one per file**, so t
 
 - **The bug is seeded on purpose and disclosed.** It is a real bug in real code, not a
   simulated failure — Kane genuinely fails against it and genuinely passes after the fix.
-- **The agent cannot grade its own homework.** `tests/*_test.md` are read-only (`chmod 444`),
-  app code and tests are separate directories, and [`target-app/CLAUDE.md`](target-app/CLAUDE.md)
-  forbids touching tests. The agent is never told *how* to fix the bug — it derives that from
+- **The agent cannot grade its own homework — and this is enforced, not requested.** A PreToolUse
+  hook denies writes to the flows and to their cached recordings, and the Stop gate checksums both.
+  (Instructions and `chmod` alone were not enough: git stores the flows as `100644`, so a fresh
+  clone got them *writable*.) The agent is never told *how* to fix the bug — it derives that from
   Kane's failure.
 - **The UI has an opt-in `?demo=1` mode** for rehearsing without burning credits. It paints an
   unmissable "DEMO DATA — NOT A REAL RUN" banner and can never be mistaken for a verdict.
