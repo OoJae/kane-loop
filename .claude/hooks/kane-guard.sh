@@ -57,18 +57,75 @@ esac
 # the block above. This is intentionally conservative: it only fires when the
 # command both mentions a protected path and looks like it mutates something.
 if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
-  # Strip the redirects that mean "discard noise", not "write a file".
-  # Without this, `ls -la tests/ 2>/dev/null` and `cat tests/foo 2>/dev/null`
-  # both contain a ">" and were denied — which stopped the agent READING the
-  # spec. Reading the objective is legitimate and useful; only writing is not.
+  # Strip the redirects that mean "discard noise", not "write a file". Without
+  # this, `ls tests/ 2>/dev/null` contains a ">" and was denied — which stopped
+  # the agent READING the spec. Reading the objective is legitimate.
   SAFE_CMD="$(printf '%s' "$CMD" | sed -E 's/[0-9]*>>?[[:space:]]*\/dev\/null//g; s/[0-9]*>&[0-9]//g')"
+
+  # Some commands rewrite files chosen by their INPUT, not by their arguments:
+  # `git apply patch`, `patch < p`, `tar -x`, `unzip`, `git stash pop` can all
+  # land on tests/ without ever naming it, so a per-segment path check cannot
+  # see them. Deny them outright while a session is running; the agent has no
+  # legitimate need to replay a patch or restore a tree mid-loop.
   case "$SAFE_CMD" in
-    *tests/*|*.claude/*)
+    *"git apply"*|*"git am"*|*"git stash"*|*"git checkout"*|*"git restore"*|*"git reset"*|*"git revert"*|*"git clean"*|*"patch "*|*"tar -x"*|*"tar x"*|*"unzip "*)
+      deny "$CMD" "$TESTS_MSG"
+      ;;
+  esac
+
+  case "$SAFE_CMD" in
+    *tests/*|*.claude/*|*kane-loop.config.json*)
+      # Default-deny, with an allowlist of read-only verbs.
+      #
+      # Enumerating the ways to write a file is whack-a-mole and it lost: the
+      # first version of this let `git checkout HEAD~5 -- tests/foo` through,
+      # which silently swaps in an older oracle. So do it the other way round —
+      # if a command touches the oracle, every segment of it has to be
+      # something that only reads.
+      #
+      # Split on && || ; and | so `cd x && cat y` is judged per segment.
+      # NOTE the trailing newline on both printfs: `while read` discards a final
+      # line that is not newline-terminated, which silently made this whole
+      # branch a no-op the first time it was written.
+      # Single-line pattern on purpose: a backslash-continued case pattern
+      # embeds the next line's indentation into the alternatives, so half the
+      # verbs silently stop matching.
+      READ_ONLY_VERBS="cat ls head tail grep egrep fgrep rg wc find file stat diff jq awk cut sort uniq echo printf cd pwd test true false less more od xxd basename dirname realpath readlink tree du shasum md5 md5sum sha256sum column nl comm join strings env export which type"
+
+      verdict=allow
+      # A redirect into a protected path is a write no matter how safe the verb
+      # looks — `echo x > tests/foo` starts with `echo`.
       case "$SAFE_CMD" in
-        *">"*|*"tee "*|*"sed -i"*|*"rm "*|*"mv "*|*"cp "*|*"chmod"*|*"truncate"*|*"dd "*|*"python"*|*"node -e"*|*"perl "*)
-          deny "$CMD" "$TESTS_MSG"
-          ;;
+        *">"*) verdict=deny ;;
       esac
+
+      if [ "$verdict" = allow ]; then
+        # Split on ; | & so `cd x && cat y` is judged per segment. The trailing
+        # newline matters: `while read` drops a final unterminated line, which
+        # silently made this whole branch a no-op the first time it was written.
+        while IFS= read -r seg; do
+          case "$seg" in
+            *tests/*|*.claude/*|*kane-loop.config.json*) ;;
+            *) continue ;;
+          esac
+          verb="$(printf '%s\n' "$seg" \
+            | sed -E 's/^[[:space:]]*//; s/^([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)*//; s/^sudo[[:space:]]+//' \
+            | awk '{print $1}' | sed 's|.*/||')"
+          [ -z "$verb" ] && continue
+          # sed only mutates with -i.
+          if [ "$verb" = sed ]; then
+            case "$seg" in *"-i"*) verdict=deny; break ;; *) continue ;; esac
+          fi
+          case " $READ_ONLY_VERBS " in
+            *" $verb "*) continue ;;
+            *) verdict=deny; break ;;
+          esac
+        done <<EOF
+$(printf '%s\n' "$SAFE_CMD" | tr ';|&' '\n')
+EOF
+      fi
+
+      [ "$verdict" = deny ] && deny "$CMD" "$TESTS_MSG"
       ;;
   esac
 fi
