@@ -275,9 +275,13 @@ function agentEvent(event: JsonValue): void {
 }
 
 function startRun(prompt: string): ActiveRun {
+  // `-p/--print` is a BOOLEAN flag and the prompt is a positional argument, so a
+  // prompt beginning with "-" is parsed as an option instead of as text. That is
+  // not cosmetic: `--settings=<inline json>` accepts hooks and executes them, so
+  // a leading-dash prompt is arbitrary command execution AND a way to override
+  // the very hooks this project is built on. Rejected at the door in POST /run;
+  // the "--" here is the second line of defence.
   const args = [
-    "-p",
-    prompt,
     "--output-format",
     "stream-json",
     "--verbose",
@@ -285,6 +289,9 @@ function startRun(prompt: string): ActiveRun {
     ALLOWED_TOOLS,
     "--permission-mode",
     PERMISSION_MODE,
+    "-p",
+    "--",
+    prompt,
   ];
 
   const child: AgentProcess = spawn(CLAUDE_BIN, args, {
@@ -450,6 +457,15 @@ app.post("/run", (req, res) => {
       ? (body as { prompt: unknown }).prompt
       : undefined;
 
+  if (typeof prompt === "string" && prompt.trim().startsWith("-")) {
+    // See startRun: a leading dash turns the prompt into a CLI flag, and
+    // `--settings=<json>` would execute hooks of the caller's choosing.
+    res.status(400).json({
+      ok: false,
+      error: "prompt may not start with '-' (it would be parsed as a CLI flag)",
+    });
+    return;
+  }
   if (typeof prompt !== "string" || prompt.trim() === "") {
     res.status(400).json({ ok: false, error: "body must be { prompt: string }" });
     return;

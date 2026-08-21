@@ -37,6 +37,7 @@ deny() {
 
 TESTS_MSG="Kane's test flows are immutable ground truth — they are the only reason a green means anything, so the loop will not let you edit them. If the flow looks wrong, say so in your reply and stop; do not work around it. Otherwise fix the application code in target-app/src and save, and Kane will re-run."
 CONFIG_MSG="The verification hooks and their settings are off limits — an agent that can switch off its own verifier isn't verified. Fix the application code in target-app/src instead."
+STATE_MSG="That file is the verifier's own state — the block counter and the integrity seal. Writing it would switch off the completion gate rather than satisfy it. Fix the application code in target-app/src instead."
 
 # --- file writes -------------------------------------------------------------
 case "$TOOL" in
@@ -48,6 +49,12 @@ case "$TOOL" in
       */tests/*)            deny "$FILE" "$TESTS_MSG" ;;
       */.claude/*)          deny "$FILE" "$CONFIG_MSG" ;;
       */kane-loop.config.json) deny "$FILE" "$CONFIG_MSG" ;;
+      # The gate's own state. .kane-failcount is load-bearing: the Stop gate
+      # releases without verifying anything once it reads >= KANE_MAX_BLOCKS, so
+      # a single write of "4" here switches the gate off. .kane-oracle.sha256 is
+      # the integrity baseline, so a write there forges the seal.
+      */.kane-failcount|*/.kane-oracle.sha256|*/.kane-events.ndjson)
+        deny "$FILE" "$STATE_MSG" ;;
     esac
     ;;
 esac
@@ -74,7 +81,7 @@ if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
   esac
 
   case "$SAFE_CMD" in
-    *tests/*|*.claude/*|*kane-loop.config.json*)
+    *tests/*|*.claude/*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*)
       # Default-deny, with an allowlist of read-only verbs.
       #
       # Enumerating the ways to write a file is whack-a-mole and it lost: the
@@ -105,7 +112,7 @@ if [ "$TOOL" = "Bash" ] && [ -n "$CMD" ]; then
         # silently made this whole branch a no-op the first time it was written.
         while IFS= read -r seg; do
           case "$seg" in
-            *tests/*|*.claude/*|*kane-loop.config.json*) ;;
+            *tests/*|*.claude/*|*kane-loop.config.json*|*.kane-failcount*|*.kane-oracle.sha256*|*.kane-events.ndjson*) ;;
             *) continue ;;
           esac
           verb="$(printf '%s\n' "$seg" \
